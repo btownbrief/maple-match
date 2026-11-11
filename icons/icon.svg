@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx=".5" cy=".35" r=".75"><stop offset="0" stop-color="#ff9a52"/><stop offset=".55" stop-color="#d8452a"/><stop offset="1" stop-color="#7a1e0e"/></radialGradient>
+    <radialGradient id="leaf" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffb35a"/><stop offset=".45" stop-color="#ef5a22"/><stop offset="1" stop-color="#b8230f"/></radialGradient>
+    <linearGradient id="cone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f8cf8a"/><stop offset=".6" stop-color="#dc9a4c"/><stop offset="1" stop-color="#ad6a2c"/></linearGradient>
+    <linearGradient id="swirl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff4dc"/><stop offset="1" stop-color="#e09a3a"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <g transform="translate(190 200) scale(150)" stroke="#2b1610" stroke-width=".075" stroke-linejoin="round">
+    <path d="M0 -.95L.12 -.6L.3 -.7L.22 -.32L.6 -.52L.56 -.36L.92 -.3L.66 -.1L.8 .04L.44 .14L.5 .4L.06 .3L-.06 .3L-.5 .4L-.44 .14L-.8 .04L-.66 -.1L-.92 -.3L-.56 -.36L-.6 -.52L-.22 -.32L-.3 -.7L-.12 -.6Z" fill="url(#leaf)"/>
+  </g>
+  <g transform="translate(300 300) scale(165)" stroke="#2b1610" stroke-width=".075" stroke-linejoin="round">
+    <path d="M-.42 .1H.42L.04 .95Q0 .99-.04 .95Z" fill="url(#cone)"/>
+    <path d="M-.58 .12Q-.66 -.2-.42 -.42Q-.34 -.72-.08 -.86Q.06 -1 .1 -.86Q.42 -.72 .44 -.42Q.66 -.2 .58 .12Q0 .24-.58 .12Z" fill="url(#swirl)"/>
+    <path d="M-.5 -.1Q0 .05 .55 -.2M-.38 -.45Q0 -.3 .4 -.5M-.15 -.75Q.05 -.65 .2 -.78" fill="none" stroke="#c8741e" stroke-width=".09"/>
+  </g>
+</svg>

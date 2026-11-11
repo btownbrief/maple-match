@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Maple Match</title>
+<meta name="description" content="A swap-and-match puzzle through a Vermont year: sugaring season, mud season, lake summer and leaf season.">
+<meta name="theme-color" content="#3a1f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Maple Match">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="bg"></canvas>
+
+  <!-- TITLE -->
+  <section id="title" class="screen">
+    <canvas id="titleArt" aria-hidden="true"></canvas>
+    <div class="title-inner">
+      <h1 class="logo" aria-label="Maple Match">
+        <span class="l1">MAPLE</span>
+        <span class="l2">MATCH</span>
+        <i class="logo-leaf"></i>
+      </h1>
+      <p class="tagline">A swap-and-match puzzle</p>
+      <div class="menu">
+        <button id="btnPlay" class="big"><span class="bt">Play</span><small id="playSub">Level 1 · First Drip</small></button>
+        <div class="row2">
+          <button id="btnDaily" class="big daily half"><span class="bt">Daily Run</span><small id="dailySub">New board today</small><span id="dailyWeek" class="week"></span></button>
+          <button id="btnBoil" class="big boil half"><span class="bt">Boil Down</span><small id="boilSub">Score chase</small><span class="week heatico"><i class="on"></i><i class="on"></i><i class="on"></i></span></button>
+        </div>
+        <button id="btnMap" class="big alt"><span class="bt">Maple Path</span><small id="mapSub">40 levels · 0 stars</small></button>
+        <div class="row">
+          <button id="btnSound" class="pill">Sound: on</button>
+          <button id="btnMusic" class="pill">Music: on</button>
+          <button id="btnThemes" class="pill">Boards</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAP -->
+  <section id="map" class="screen hidden">
+    <div id="mapHead">
+      <button id="mapHome" class="icon" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11.5L12 4l9 7.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg></button>
+      <div id="mapTitle">Maple Path</div>
+      <div id="mapStars"><i class="star-ico"></i><b id="mapStarN">0</b></div>
+    </div>
+    <div id="mapScroll"><div id="mapInner"></div></div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="screen hidden">
+    <canvas id="board"></canvas>
+    <div id="hud">
+      <div id="hudTop">
+        <button id="btnPause" class="icon" aria-label="Pause"><svg viewBox="0 0 24 24"><rect x="5.5" y="5" width="4.5" height="14" rx="1.5"/><rect x="14" y="5" width="4.5" height="14" rx="1.5"/></svg></button>
+        <div id="lvlName"><small id="lvlSeason">Sugaring Season</small><span id="lvlTitle">1 · First Drip</span></div>
+        <button id="btnSnd" class="icon" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke-width="2" stroke-linecap="round"/><path class="mute" d="M16 9l5 6M21 9l-5 6" fill="none" stroke-width="2" stroke-linecap="round"/></svg></button>
+      </div>
+      <div id="hudMain">
+        <div id="movesBox"><label>MOVES</label><b id="moves">20</b></div>
+        <div id="goals"></div>
+      </div>
+      <div id="scoreRow">
+        <div id="scoreBar"><div id="scoreFill"></div><span id="barLabel"></span><i class="mark" id="mk0"></i><i class="mark" id="mk1"></i><i class="mark" id="mk2"></i></div>
+        <b id="score">0</b>
+      </div>
+    </div>
+    <div id="tip" class="hidden"><i class="drop-ico"></i><span id="tipText"></span></div>
+  </section>
+
+  <!-- PAUSE -->
+  <div id="pause" class="overlay hidden">
+    <div class="panel">
+      <h2>Paused</h2>
+      <div id="pauseGoals" class="goal-list"></div>
+      <button id="pResume" class="big"><span class="bt">Resume</span></button>
+      <button id="pRestart" class="pill wide">Restart level</button>
+      <div class="row">
+        <button id="pSound" class="pill">Sound: on</button>
+        <button id="pMusic" class="pill">Music: on</button>
+      </div>
+      <button id="pMap" class="pill wide">Maple Path</button>
+    </div>
+  </div>
+
+  <!-- WIN -->
+  <div id="win" class="overlay hidden">
+    <div class="panel">
+      <h2 id="winTitle">Level clear!</h2>
+      <div id="winStars"><i class="bigstar"></i><i class="bigstar mid"></i><i class="bigstar"></i></div>
+      <div id="winScore">0</div>
+      <div id="winSub">Best 0</div>
+      <div id="winUnlock" class="hidden"></div>
+      <button id="wNext" class="big"><span class="bt">Next level</span></button>
+      <div class="row">
+        <button id="wReplay" class="pill">Replay</button>
+        <button id="wMap" class="pill">Maple Path</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOARD THEMES -->
+  <div id="themes" class="overlay hidden">
+    <div class="panel">
+      <h2>Boards</h2>
+      <p class="sub">Earn stars and keep a daily streak to unlock more.</p>
+      <div id="themeList"></div>
+      <button id="thClose" class="big"><span class="bt">Done</span></button>
+    </div>
+  </div>
+
+  <!-- LOSE -->
+  <div id="lose" class="overlay hidden">
+    <div class="panel">
+      <h2>Out of moves</h2>
+      <div id="loseGoals" class="goal-list"></div>
+      <p id="loseSub">So close. One more go?</p>
+      <button id="lRetry" class="big"><span class="bt">Try again</span></button>
+      <button id="lMap" class="pill wide">Maple Path</button>
+    </div>
+  </div>
+</div>
+<script src="rules.js"></script>
+<script src="levels.js"></script>
+<script src="ai.js"></script>
+<script src="art.js"></script>
+<script src="audio.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
