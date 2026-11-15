@@ -15,6 +15,9 @@
   const K = { N: 0, ROW: 1, COL: 2, BURST: 3, CONE: 4, BUCKET: 5 };
   const NAMES = ['creemee', 'cider donut', 'maple leaf', 'syrup jug', 'apple', 'pinecone'];
   const CREATE_BONUS = [0, 120, 120, 200, 400];
+  // Boil Down (survival score run): heat multiplier steps, and the score ramps
+  const HEAT_MULT = [1, 1, 1.5, 2, 2.5, 3];
+  const BOIL = { start: 15, cap: 3, thickAt: 15000, strictAt: 35000, strictHeat: 3 };
 
   // ---------------------------------------------------------------- rng (state lives in s.rs so clones copy it)
   function rand(s) {
@@ -71,6 +74,10 @@
       const col = [];
       for (let y = 0; y < h; y++) if (!s.hole[y * w + x]) col.push(y * w + x);
       s.cols.push(col); s.bottom.push(col.length ? col[col.length - 1] : -1);
+    }
+    if (level.boil) { // Boil Down: start short, earn moves by making specials
+      s.boil = { heat: 1, peak: 1, gained: 0, thick: false, sixth: [0, 1, 2, 3, 4, 5].find(t => !s.types.includes(t)) };
+      s.mult = 1;
     }
     if (level.buckets) s.bucket = { total: level.buckets.total, max: level.buckets.max || 1, gap: level.buckets.gap || 2, spawned: 0, collected: 0, since: 0 };
     const frost = s.goals.find(g => g.type === 'frost');
@@ -467,7 +474,25 @@
     s.movesLeft--; s.movesUsed++;
     return finishMove(s, steps, opts);
   }
+  /** Boil Down after each move: heat goes up when the move makes or fires a special (+2 for a special+special combo),
+   *  cools otherwise. Each special the move creates (cascades too) earns +1 move, a combo +2, at most +3 per move.
+   *  From 15,000 points the sixth kind spawns; from 35,000 a new special only pays while heat is x2 or more. */
+  function boilAward(s, steps) {
+    const b = s.boil, heat0 = b.heat;
+    const combos = steps.filter(st => st.combo).length;
+    const made = steps.reduce((n, st) => n + st.created.filter(c => !c.morph).length, 0);
+    const hot = combos || made || steps.some(st => st.blasts.length);
+    b.heat = combos ? Math.min(5, heat0 + 2) : hot ? Math.min(5, heat0 + 1) : Math.max(1, heat0 - 1);
+    b.peak = Math.max(b.peak, b.heat);
+    const pays = s.score < BOIL.strictAt || heat0 >= BOIL.strictHeat;
+    b.gained = Math.min(BOIL.cap, (pays ? made : 0) + combos * 2);
+    s.movesLeft += b.gained;
+    b.thickNow = false;
+    if (!b.thick && s.score >= BOIL.thickAt && b.sixth !== undefined) { b.thick = true; b.thickNow = true; s.types.push(b.sixth); }
+    s.mult = HEAT_MULT[b.heat];
+  }
   function finishMove(s, steps, opts) {
+    if (s.boil) boilAward(s, steps);
     if (goalsMet(s)) s.won = true;
     else if (s.movesLeft <= 0) s.lost = true;
     let shuffle = null;
@@ -567,11 +592,12 @@
     c.goals = s.goals.map(g => Object.assign({}, g));
     c.bucket = s.bucket ? Object.assign({}, s.bucket) : null;
     c.types = s.types.slice();
+    if (s.boil) c.boil = Object.assign({}, s.boil);
     return c;
   }
   function iceLayers(s) { let n = 0; for (const q of s.p) if (q && q.ice) n += q.ice; return n; }
 
-  const api = { K, NAMES, newGame, findGroups, matchAt, canSwap, listMoves, trySwap, resolve, reshuffle, sugarRush, hintMove, clone, goalsMet, goalProgress, iceLayers, bucketsOnBoard, rand, blastCells, adjacent };
+  const api = { K, NAMES, HEAT_MULT, BOIL, newGame, findGroups, matchAt, canSwap, listMoves, trySwap, resolve, reshuffle, sugarRush, hintMove, clone, goalsMet, goalProgress, iceLayers, bucketsOnBoard, rand, blastCells, adjacent };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MMRules = api;
 })(typeof self !== 'undefined' ? self : this);

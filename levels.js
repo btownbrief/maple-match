@@ -2,7 +2,8 @@
  * layout: one string per row. '.' cell, ' ' hole, '1'/'2' piece frozen in 1 or 2 layers of frost, 'B' sap bucket.
  * types: 0 creemee, 1 cider donut, 2 maple leaf, 3 syrup jug, 4 apple, 5 pinecone
  * goals: score n | collect t n | frost (all frozen pieces) | bucket (all sap buckets reach the bottom)
- * stars: [1-star score, 2-star score, 3-star score] (tuned with tools/bot.js; 1 star = beating the level)
+ * stars: [m2, m3] = moves left at the win for 2 and 3 stars (1 star = beating the level). From tools/bot.js --stars:
+ *        the smart bot's 50th / 85th percentile of moves left among its wins (min 1 and 3).
  * tip: a one-line hint shown the first time a level opens (only when something new appears).
  */
 (function (root) {
@@ -18,11 +19,11 @@
 
   const L = [
     // ---------------------------------------------------------------- March: Sugaring Season
-    { name: 'First Drip', types: M5, moves: 15, stars: [3000, 6100, 7800], goals: [{ type: 'score', n: 3000 }], layout: full(7, 7) },
-    { name: 'Leaf Pile', types: M5, moves: 16, stars: [0, 8600, 12700], goals: [{ type: 'collect', t: 2, n: 26 }], layout: full(7, 8),
+    { name: 'First Drip', types: M5, moves: 12, stars: [5, 7], goals: [{ type: 'score', n: 3000 }], layout: full(7, 7) },
+    { name: 'Leaf Pile', types: M5, moves: 16, stars: [7, 10], goals: [{ type: 'collect', t: 2, n: 26 }], layout: full(7, 8),
       tip: 'Match 4 in a line to make a line clearer.' },
-    { name: 'Jug Line', types: M5, moves: 18, stars: [0, 12900, 16900], goals: [{ type: 'collect', t: 3, n: 30 }, { type: 'collect', t: 1, n: 30 }], layout: full(8, 8) },
-    { name: 'Sugarbush', types: M5, moves: 18, stars: [7000, 10400, 12400], goals: [{ type: 'score', n: 7000 }], tip: 'Match in an L or T shape for a sap burst.',
+    { name: 'Jug Line', types: M5, moves: 17, stars: [6, 9], goals: [{ type: 'collect', t: 3, n: 30 }, { type: 'collect', t: 1, n: 30 }], layout: full(8, 8) },
+    { name: 'Sugarbush', types: M5, moves: 14, stars: [5, 8], goals: [{ type: 'score', n: 7000 }], tip: 'Match in an L or T shape for a sap burst.',
       layout: [
         '  ....  ',
         ' ...... ',
@@ -33,7 +34,7 @@
         ' ...... ',
         '  ....  ',
       ] },
-    { name: 'Cold Snap', types: M5, moves: 15, stars: [0, 8100, 11300], goals: [{ type: 'frost' }], tip: 'Frozen pieces can\'t be swapped. Match on or next to them to crack the frost.',
+    { name: 'Cold Snap', types: M5, moves: 11, stars: [5, 7], goals: [{ type: 'frost' }], tip: 'Frozen pieces can\'t be swapped. Match on or next to them to crack the frost.',
       layout: [
         '........',
         '........',
@@ -44,7 +45,7 @@
         '1.1..1.1',
         '.1.11.1.',
       ] },
-    { name: 'Tap Lines', types: M5, moves: 20, stars: [0, 7800, 10700], goals: [{ type: 'collect', t: 4, n: 26 }], tip: 'Match 5 in a line for a twist cone. Swap it with any piece.',
+    { name: 'Tap Lines', types: M5, moves: 20, stars: [7, 11], goals: [{ type: 'collect', t: 4, n: 26 }], tip: 'Match 5 in a line for a twist cone. Swap it with any piece.',
       layout: [
         '........',
         '........',
@@ -55,7 +56,7 @@
         '........',
         '........',
       ] },
-    { name: 'First Bucket', types: M5, moves: 20, stars: [0, 10900, 13900], goals: [{ type: 'bucket' }], buckets: { total: 2, max: 1, gap: 2 }, tip: 'Bring the sap bucket to the bottom: clear under it, or drag it down a row.',
+    { name: 'First Bucket', types: M5, moves: 14, stars: [5, 8], goals: [{ type: 'bucket' }], buckets: { total: 2, max: 1, gap: 2 }, tip: 'Bring the sap bucket to the bottom: clear under it, or drag it down a row.',
       layout: [
         '...B...',
         '.......',
@@ -66,7 +67,7 @@
         '.......',
         '.......',
       ] },
-    { name: 'Sugar Shack', types: M5, moves: 20, stars: [0, 10300, 13100], goals: [{ type: 'frost' }, { type: 'collect', t: 3, n: 28 }],
+    { name: 'Sugar Shack', types: M5, moves: 17, stars: [5, 9], goals: [{ type: 'frost' }, { type: 'collect', t: 3, n: 28 }],
       layout: [
         '   ..   ',
         '  ....  ',
@@ -77,7 +78,7 @@
         '.11..11.',
         '.111111.',
       ] },
-    { name: 'Steam Rising', types: M5, moves: 20, stars: [5000, 11400, 15600], goals: [{ type: 'bucket' }, { type: 'score', n: 5000 }], buckets: { total: 3, max: 2, gap: 2 },
+    { name: 'Steam Rising', types: M5, moves: 18, stars: [6, 10], goals: [{ type: 'bucket' }, { type: 'score', n: 5000 }], buckets: { total: 3, max: 2, gap: 2 },
       layout: [
         '..B..B..',
         '........',
@@ -88,7 +89,7 @@
         '........',
         '........',
       ] },
-    { name: 'Boil Over', types: M5, moves: 22, stars: [0, 13600, 18000], goals: [{ type: 'frost' }, { type: 'collect', t: 2, n: 32 }], tip: 'Thick frost takes two cracks.',
+    { name: 'Boil Over', types: M5, moves: 17, stars: [5, 8], goals: [{ type: 'frost' }, { type: 'collect', t: 2, n: 32 }], tip: 'Thick frost takes two cracks.',
       layout: [
         '........',
         '........',
@@ -101,7 +102,7 @@
       ] },
 
     // ---------------------------------------------------------------- April: Mud Season
-    { name: 'Muddy Lane', types: D5, moves: 22, stars: [0, 8200, 10200], goals: [{ type: 'collect', t: 0, n: 24 }, { type: 'collect', t: 5, n: 24 }],
+    { name: 'Muddy Lane', types: D5, moves: 19, stars: [4, 8], goals: [{ type: 'collect', t: 0, n: 24 }, { type: 'collect', t: 5, n: 24 }],
       layout: [
         '..  ....',
         '..  ....',
@@ -112,7 +113,7 @@
         '........',
         '........',
       ] },
-    { name: 'Peepers', types: D5, moves: 20, stars: [7500, 10400, 13000], goals: [{ type: 'score', n: 7500 }],
+    { name: 'Peepers', types: D5, moves: 17, stars: [6, 10], goals: [{ type: 'score', n: 7500 }],
       layout: [
         '........',
         '........',
@@ -123,7 +124,7 @@
         '........',
         '........',
       ] },
-    { name: 'Frost Heaves', types: D5, moves: 22, stars: [0, 12000, 16500], goals: [{ type: 'frost' }],
+    { name: 'Frost Heaves', types: D5, moves: 14, stars: [4, 8], goals: [{ type: 'frost' }],
       layout: [
         '........',
         '........',
@@ -134,7 +135,7 @@
         '........',
         '22222222',
       ] },
-    { name: 'Pothole', types: D5, moves: 26, stars: [0, 10200, 13400], goals: [{ type: 'bucket' }], buckets: { total: 4, max: 2, gap: 2 },
+    { name: 'Pothole', types: D5, moves: 21, stars: [5, 9], goals: [{ type: 'bucket' }], buckets: { total: 4, max: 2, gap: 2 },
       layout: [
         '.B....B.',
         '........',
@@ -145,7 +146,7 @@
         '........',
         '........',
       ] },
-    { name: 'Rubber Boots', types: D5, moves: 20, stars: [0, 14000, 17600], goals: [{ type: 'collect', t: 1, n: 36 }, { type: 'collect', t: 3, n: 36 }],
+    { name: 'Rubber Boots', types: D5, moves: 16, stars: [4, 7], goals: [{ type: 'collect', t: 1, n: 36 }, { type: 'collect', t: 3, n: 36 }],
       layout: [
         '....... ',
         '....... ',
@@ -156,7 +157,7 @@
         ' .......',
         ' .......',
       ] },
-    { name: 'Thaw', types: D5, moves: 20, stars: [0, 13300, 17400], goals: [{ type: 'frost' }],
+    { name: 'Thaw', types: D5, moves: 17, stars: [6, 10], goals: [{ type: 'frost' }],
       layout: [
         '........',
         '.2....2.',
@@ -167,7 +168,7 @@
         '.2....2.',
         '2......2',
       ] },
-    { name: 'Mud Pie', types: D5, moves: 26, stars: [0, 9000, 12500], goals: [{ type: 'bucket' }], buckets: { total: 4, max: 2, gap: 2 },
+    { name: 'Mud Pie', types: D5, moves: 24, stars: [5, 10], goals: [{ type: 'bucket' }], buckets: { total: 4, max: 2, gap: 2 },
       layout: [
         '.B....B.',
         '........',
@@ -178,7 +179,7 @@
         '........',
         '........',
       ] },
-    { name: 'Fiddleheads', types: D5, moves: 22, stars: [15500, 19600, 22500], goals: [{ type: 'score', n: 15500 }],
+    { name: 'Fiddleheads', types: D5, moves: 17, stars: [4, 8], goals: [{ type: 'score', n: 15500 }],
       layout: [
         '  ....  ',
         '........',
@@ -190,7 +191,7 @@
         '........',
         '  ....  ',
       ] },
-    { name: 'Rain Barrel', types: D5, moves: 21, stars: [0, 12000, 16400], goals: [{ type: 'bucket' }, { type: 'frost' }], buckets: { total: 3, max: 2, gap: 3 },
+    { name: 'Rain Barrel', types: D5, moves: 15, stars: [4, 7], goals: [{ type: 'bucket' }, { type: 'frost' }], buckets: { total: 3, max: 2, gap: 3 },
       layout: [
         '..B..B..',
         '........',
@@ -201,7 +202,7 @@
         '........',
         '........',
       ] },
-    { name: 'Mud Boss', types: D5, moves: 24, stars: [0, 10900, 13100], goals: [{ type: 'frost' }, { type: 'collect', t: 0, n: 32 }, { type: 'collect', t: 2, n: 32 }],
+    { name: 'Mud Boss', types: D5, moves: 23, stars: [5, 9], goals: [{ type: 'frost' }, { type: 'collect', t: 0, n: 32 }, { type: 'collect', t: 2, n: 32 }],
       layout: [
         '........',
         '........',
@@ -214,9 +215,9 @@
       ] },
 
     // ---------------------------------------------------------------- July: Lake Summer
-    { name: 'Lake Breeze', types: ALL, moves: 22, stars: [6000, 9100, 11000], goals: [{ type: 'score', n: 6000 }], tip: 'Six kinds now. Look for the long matches.',
+    { name: 'Lake Breeze', types: ALL, moves: 17, stars: [5, 10], goals: [{ type: 'score', n: 6000 }], tip: 'Six kinds now. Look for the long matches.',
       layout: full(8, 8) },
-    { name: 'Creemee Stand', types: S5, moves: 22, stars: [0, 11500, 15000], goals: [{ type: 'collect', t: 0, n: 36 }],
+    { name: 'Creemee Stand', types: S5, moves: 16, stars: [4, 6], goals: [{ type: 'collect', t: 0, n: 36 }],
       layout: [
         '........',
         '........',
@@ -227,7 +228,7 @@
         '  ....  ',
         '   ..   ',
       ] },
-    { name: 'Bike Path', types: S5, moves: 22, stars: [13500, 17400, 19800], goals: [{ type: 'score', n: 13500 }],
+    { name: 'Bike Path', types: S5, moves: 17, stars: [5, 8], goals: [{ type: 'score', n: 13500 }],
       layout: [
         '........',
         '........',
@@ -238,9 +239,9 @@
         '........',
         '........',
       ] },
-    { name: 'Farm Stand', types: S5, moves: 20, stars: [0, 17600, 21900], goals: [{ type: 'collect', t: 4, n: 42 }, { type: 'collect', t: 1, n: 42 }],
+    { name: 'Farm Stand', types: S5, moves: 14, stars: [3, 6], goals: [{ type: 'collect', t: 4, n: 42 }, { type: 'collect', t: 1, n: 42 }],
       layout: full(8, 9) },
-    { name: 'Sunset Pier', types: S5, moves: 26, stars: [0, 7700, 11600], goals: [{ type: 'bucket' }], buckets: { total: 4, max: 2, gap: 2 },
+    { name: 'Sunset Pier', types: S5, moves: 20, stars: [3, 7], goals: [{ type: 'bucket' }], buckets: { total: 4, max: 2, gap: 2 },
       layout: [
         '.B.  .B.',
         '...  ...',
@@ -251,7 +252,7 @@
         '...  ...',
         '...  ...',
       ] },
-    { name: 'Ice Box', types: S5, moves: 20, stars: [0, 11400, 15200], goals: [{ type: 'frost' }],
+    { name: 'Ice Box', types: S5, moves: 14, stars: [4, 7], goals: [{ type: 'frost' }],
       layout: [
         '........',
         '........',
@@ -262,7 +263,7 @@
         '.222222.',
         '........',
       ] },
-    { name: 'Ferry Crossing', types: S5, moves: 26, stars: [0, 14700, 18300], goals: [{ type: 'bucket' }, { type: 'collect', t: 3, n: 20 }], buckets: { total: 4, max: 2, gap: 2 },
+    { name: 'Ferry Crossing', types: S5, moves: 21, stars: [4, 8], goals: [{ type: 'bucket' }, { type: 'collect', t: 3, n: 20 }], buckets: { total: 4, max: 2, gap: 2 },
       layout: [
         '.B....B.',
         '........',
@@ -273,9 +274,9 @@
         '........',
         '........',
       ] },
-    { name: 'Berry Patch', types: ALL, moves: 24, stars: [0, 10200, 13200], goals: [{ type: 'collect', t: 0, n: 24 }, { type: 'collect', t: 4, n: 24 }],
+    { name: 'Berry Patch', types: ALL, moves: 18, stars: [4, 8], goals: [{ type: 'collect', t: 0, n: 24 }, { type: 'collect', t: 4, n: 24 }],
       layout: full(8, 9) },
-    { name: 'Fireworks', types: S5, moves: 22, stars: [12500, 15500, 17300], goals: [{ type: 'score', n: 12500 }],
+    { name: 'Fireworks', types: S5, moves: 19, stars: [5, 8], goals: [{ type: 'score', n: 12500 }],
       layout: [
         '.. .. ..',
         '........',
@@ -286,7 +287,7 @@
         '........',
         '.. .. ..',
       ] },
-    { name: 'Heat Wave', types: S5, moves: 23, stars: [0, 14600, 19800], goals: [{ type: 'bucket' }, { type: 'frost' }], buckets: { total: 4, max: 2, gap: 2 },
+    { name: 'Heat Wave', types: S5, moves: 17, stars: [4, 7], goals: [{ type: 'bucket' }, { type: 'frost' }], buckets: { total: 4, max: 2, gap: 2 },
       layout: [
         '...BB...',
         '........',
@@ -299,9 +300,9 @@
       ] },
 
     // ---------------------------------------------------------------- October: Leaf Season
-    { name: 'Leaf Peepers', types: O5, moves: 19, stars: [0, 17500, 22400], goals: [{ type: 'collect', t: 2, n: 50 }],
+    { name: 'Leaf Peepers', types: O5, moves: 14, stars: [3, 5], goals: [{ type: 'collect', t: 2, n: 50 }],
       layout: full(8, 9) },
-    { name: 'Cider Mill', types: O5, moves: 25, stars: [0, 6900, 9000], goals: [{ type: 'collect', t: 1, n: 26 }, { type: 'collect', t: 4, n: 26 }],
+    { name: 'Cider Mill', types: O5, moves: 22, stars: [4, 9], goals: [{ type: 'collect', t: 1, n: 26 }, { type: 'collect', t: 4, n: 26 }],
       layout: [
         '........',
         '........',
@@ -312,7 +313,7 @@
         '........',
         '........',
       ] },
-    { name: 'Corn Maze', types: O5, moves: 24, stars: [10000, 13100, 14700], goals: [{ type: 'score', n: 10000 }],
+    { name: 'Corn Maze', types: O5, moves: 21, stars: [5, 9], goals: [{ type: 'score', n: 10000 }],
       layout: [
         '........',
         '. ... ..',
@@ -323,7 +324,7 @@
         '........',
         '........',
       ] },
-    { name: 'Pumpkin Patch', types: O5, moves: 18, stars: [0, 10900, 14100], goals: [{ type: 'frost' }],
+    { name: 'Pumpkin Patch', types: O5, moves: 12, stars: [3, 6], goals: [{ type: 'frost' }],
       layout: [
         '........',
         '...22...',
@@ -334,7 +335,7 @@
         '..2222..',
         '........',
       ] },
-    { name: 'Covered Bridge', types: O5, moves: 27, stars: [0, 9600, 15600], goals: [{ type: 'bucket' }], buckets: { total: 4, max: 2, gap: 2 },
+    { name: 'Covered Bridge', types: O5, moves: 21, stars: [3, 8], goals: [{ type: 'bucket' }], buckets: { total: 4, max: 2, gap: 2 },
       layout: [
         '.B....B.',
         '........',
@@ -345,7 +346,7 @@
         '...  ...',
         '...  ...',
       ] },
-    { name: 'Apple Picking', types: ALL, moves: 24, stars: [0, 10800, 14300], goals: [{ type: 'collect', t: 4, n: 34 }],
+    { name: 'Apple Picking', types: ALL, moves: 21, stars: [4, 9], goals: [{ type: 'collect', t: 4, n: 34 }],
       layout: [
         ' ...... ',
         '........',
@@ -357,7 +358,7 @@
         '........',
         ' ...... ',
       ] },
-    { name: 'First Frost', types: O5, moves: 21, stars: [0, 15100, 20900], goals: [{ type: 'frost' }],
+    { name: 'First Frost', types: O5, moves: 15, stars: [3, 7], goals: [{ type: 'frost' }],
       layout: [
         '2......2',
         '22....22',
@@ -368,7 +369,7 @@
         '22....22',
         '2......2',
       ] },
-    { name: 'Harvest Moon', types: O5, moves: 23, stars: [0, 12500, 16800], goals: [{ type: 'bucket' }, { type: 'collect', t: 2, n: 24 }], buckets: { total: 4, max: 2, gap: 2 },
+    { name: 'Harvest Moon', types: O5, moves: 18, stars: [4, 8], goals: [{ type: 'bucket' }, { type: 'collect', t: 2, n: 24 }], buckets: { total: 4, max: 2, gap: 2 },
       layout: [
         '..B..B..',
         '........',
@@ -379,7 +380,7 @@
         '........',
         '........',
       ] },
-    { name: 'Peak Foliage', types: ALL, moves: 24, stars: [0, 11500, 14200], goals: [{ type: 'frost' }, { type: 'collect', t: 2, n: 30 }],
+    { name: 'Peak Foliage', types: ALL, moves: 22, stars: [5, 9], goals: [{ type: 'frost' }, { type: 'collect', t: 2, n: 30 }],
       layout: [
         '........',
         '........',
@@ -391,7 +392,7 @@
         '........',
         '........',
       ] },
-    { name: 'Last Leaf', types: O5, moves: 28, stars: [0, 15200, 18900], goals: [{ type: 'bucket' }, { type: 'frost' }, { type: 'collect', t: 2, n: 20 }], buckets: { total: 4, max: 2, gap: 2 },
+    { name: 'Last Leaf', types: O5, moves: 24, stars: [5, 10], goals: [{ type: 'bucket' }, { type: 'frost' }, { type: 'collect', t: 2, n: 20 }], buckets: { total: 4, max: 2, gap: 2 },
       layout: [
         '.B....B.',
         '........',

@@ -72,7 +72,7 @@
         <div id="goals"></div>
       </div>
       <div id="scoreRow">
-        <div id="scoreBar"><div id="scoreFill"></div><span id="barLabel"></span><i class="mark" id="mk0"></i><i class="mark" id="mk1"></i><i class="mark" id="mk2"></i></div>
+        <div id="scoreBar"><div id="scoreFill"></div><span id="barLabel"></span><span id="barInk" aria-hidden="true"></span><i class="mark" id="mk0"></i><i class="mark" id="mk1"></i><i class="mark" id="mk2"></i></div>
         <b id="score">0</b>
       </div>
     </div>
@@ -123,7 +123,7 @@
   <!-- LOSE -->
   <div id="lose" class="overlay hidden">
     <div class="panel">
-      <h2>Out of moves</h2>
+      <h2 id="loseTitle">Out of moves</h2>
       <div id="loseGoals" class="goal-list"></div>
       <p id="loseSub">So close. One more go?</p>
       <button id="lRetry" class="big"><span class="bt">Try again</span></button>

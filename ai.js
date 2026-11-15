@@ -20,6 +20,7 @@
     });
     v += (c.score - s0.score) / 80;
     v += (specials(c) - specials(s0)) * 30;
+    if (c.boil) v += c.boil.gained * 300 + (c.boil.heat - s0.boil.heat) * 60; // Boil Down: moves and heat are what keep a run alive
     return v;
   }
   function mulberry(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -48,8 +49,8 @@
       if (!res.ok) throw new Error('bot move rejected');
     }
     let score = s.score;
-    if (s.won) { R.sugarRush(s); score = s.score; }
-    return { won: s.won, score, used: s.movesUsed, progress: R.goalProgress(s) };
+    if (s.won || s.boil) { R.sugarRush(s); score = s.score; }
+    return { won: s.won, score, used: s.movesUsed, progress: R.goalProgress(s), peak: s.boil ? s.boil.peak : 0 };
   }
 
   // ---------------------------------------------------------------- Daily Sap Run
@@ -91,39 +92,48 @@
     level.moves = dailyMoves(level);
     return level;
   }
-  /** Move budget from the goal size (calibrated offline with tools/daily-check.js, no bot needed on the phone). */
+  /** First guess at the budget from the goal size and board size. Only a starting point and a cap for budgetDaily. */
   function dailyMoves(level) {
-    let m = 0;
+    let m = 0, cells = 0;
+    level.layout.forEach(r => { for (const ch of r) if (ch !== ' ') cells++; });
     for (const g of level.goals) {
       if (g.type === 'collect') m += g.n * DAILY_K.collect;
       if (g.type === 'frost') { let layers = 0; level.layout.forEach(r => { for (const ch of r) if (ch === '1') layers += 1; else if (ch === '2') layers += 2; }); m += DAILY_K.frostBase + layers * DAILY_K.frost; }
       if (g.type === 'bucket') m += DAILY_K.bucket;
     }
+    m *= Math.pow(64 / Math.max(30, cells), 2.5);
     if (level.types.length === 6) m *= DAILY_K.six;
-    return Math.max(16, Math.round(m));
+    return Math.max(12, Math.round(m));
   }
-  const DAILY_K = { collect: 0.35, frostBase: 9, frost: 0.5, bucket: 20, six: 1.45 };
-  function pct(a, p) { if (!a.length) return 0; const b = a.slice().sort((x, y) => x - y); return b[Math.min(b.length - 1, Math.floor(p * b.length))]; }
-  /** Tune the move count so the smart bot wins at least ~70% of the time, then set star scores. */
-  function tuneDaily(level, games) {
-    games = games || 10;
+  const DAILY_K = { collect: 0.24, frostBase: 0, frost: 0.55, bucket: 16, six: 2.05 };
+  const DAILY_GAMES = 48, DAILY_WIN = 0.82;
+  /** The day's real budget. A formula cannot see where the holes and frost sit, so the smart bot plays today's
+   *  board DAILY_GAMES times with no move limit, and the budget is the count it wins within about DAILY_WIN of the
+   *  time. Seeded, so every phone and tools/daily-check.js get the same number. ~1 s in node; the game runs it in
+   *  a worker (daily-worker.js) and caches it for the day. */
+  function budgetDaily(level, games) {
+    games = games || DAILY_GAMES;
+    const cap = Math.max(45, dailyMoves(level) * 2);
+    const lv = Object.assign({}, level, { moves: cap });
     const rnd = mulberry(hash(String(level.daily)) ^ 99);
-    let scores = [];
-    for (let tries = 0; tries < 8; tries++) {
-      let wins = 0; scores = [];
-      for (let g = 0; g < games; g++) { const r = playGame(level, 7000 + g * 31, 'smart', rnd); if (r.won) { wins++; scores.push(r.score); } }
-      if (wins / games >= 0.7 || level.moves >= 34) break;
-      level.moves += 2;
-    }
-    const rnd100 = v => Math.round(v / 100) * 100;
-    const s2 = rnd100(pct(scores, 0.25)) || 5000, s3 = Math.max(rnd100(pct(scores, 0.65)), s2 + 1000);
-    level.stars = [0, s2, s3];
+    const used = [];
+    for (let g = 0; g < games; g++) { const r = playGame(lv, 7000 + g * 31, 'smart', rnd); used.push(r.won ? r.used : 1e9); }
+    let best = level.moves, gap = 9;
+    for (let m = 10; m <= cap; m++) { const d = Math.abs(used.filter(u => u <= m).length / games - DAILY_WIN); if (d < gap - 1e-9) { gap = d; best = m; } }
+    level.moves = best;
     return level;
   }
-  function makeDaily(key, games) { return tuneDaily(dailyCandidate(key), games); }
+  /** Boil Down for a date: today's five kinds and season are fixed; the board is fresh each run. */
+  function boilLevel(key) {
+    const rnd = mulberry(hash('boil:' + key));
+    const types = [0, 1, 2, 3, 4, 5].sort(() => rnd() - 0.5).slice(0, 5).sort();
+    const month = +key.slice(5, 7) - 1;
+    return { id: 'boil', boil: key, name: 'Boil Down', season: seasonFor(month), types, moves: R.BOIL.start, goals: [{ type: 'score', n: 1e9 }], layout: Array(8).fill('........') };
+  }
+  function makeDaily(key, games) { return budgetDaily(dailyCandidate(key), games); }
   function dateKey(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 
-  const api = { playGame, value, makeDaily, dailyCandidate, tuneDaily, dateKey, mulberry, hash, DAILY_K };
+  const api = { playGame, value, boilLevel, makeDaily, dailyCandidate, budgetDaily, dateKey, mulberry, hash, DAILY_K };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MMAI = api;
 })(typeof self !== 'undefined' ? self : this);

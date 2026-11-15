@@ -9,17 +9,17 @@
   const easeInOut = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
   const easeOut = t => 1 - Math.pow(1 - t, 3);
   const backOut = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
-  const CASCADE_WORDS = ['', '', 'Sappy!', 'Wicked Good!', 'Maple-icious!', 'Sugarbush Supreme!', 'Top of the Tap!'];
+  const CASCADE_WORDS = ['', '', '', 'Wicked Good!', 'Maple-icious!', 'Sugarbush Supreme!', 'Top of the Tap!'];
   const GOAL_WORD = { 0: 'creemees', 1: 'cider donuts', 2: 'maple leaves', 3: 'syrup jugs', 4: 'apples', 5: 'pinecones' };
 
   // ---------------------------------------------------------------- board themes (unlocked by stars and daily streaks)
   const THEMES = [
-    { key: 'slate', name: 'Slate', frame: ['#9a5a32', '#7a4222', '#5e3017'], tiles: [['#3b5670', '#30485f'], ['#33495f', '#2a3e52']], under: '#1c2a38', need: null },
-    { key: 'birch', name: 'Birch Bark', frame: ['#f4ecdc', '#ddd0b6', '#b9a888'], tiles: [['#5d4d42', '#4f4138'], ['#55473d', '#463a31']], under: '#2a201a', need: { stars: 15 }, bark: true },
-    { key: 'lake', name: 'Lake Blue', frame: ['#5f97c4', '#3f78a8', '#2a5a86'], tiles: [['#1f3f66', '#18345a'], ['#1b385d', '#142d4f']], under: '#0d1d33', need: { streak: 3 } },
-    { key: 'barn', name: 'Red Barn', frame: ['#c94a30', '#a8371f', '#7e2515'], tiles: [['#40332d', '#352a25'], ['#3a2e29', '#2f2520']], under: '#1e1512', need: { stars: 45 } },
-    { key: 'night', name: 'Sugaring Night', frame: ['#5a4a7a', '#463862', '#30264a'], tiles: [['#2a2648', '#221f3d'], ['#26223f', '#1e1b36']], under: '#120f22', need: { stars: 90 }, stars: true },
-    { key: 'peak', name: 'Peak Foliage', frame: ['#f2a03a', '#d9741c', '#a84f12'], tiles: [['#4a2a3e', '#3d2233'], ['#43263a', '#371e2e']], under: '#1f0f18', need: { streak: 7 } },
+    { key: 'slate', name: 'Slate', frame: ['#9a5a32', '#7a4222', '#5e3017'], tiles: [['#2e343c', '#282d35'], ['#2b3038', '#252a31']], under: '#171a1f', need: null },
+    { key: 'birch', name: 'Birch Bark', frame: ['#f4ecdc', '#ddd0b6', '#b9a888'], tiles: [['#5d4d42', '#4f4138'], ['#5a4a3f', '#4c3e35']], under: '#2a201a', need: { stars: 15 }, bark: true },
+    { key: 'lake', name: 'Lake Blue', frame: ['#5f97c4', '#3f78a8', '#2a5a86'], tiles: [['#1c2c40', '#18273a'], ['#1a2a3d', '#162436']], under: '#0c1520', need: { streak: 3 } },
+    { key: 'barn', name: 'Red Barn', frame: ['#c94a30', '#a8371f', '#7e2515'], tiles: [['#40332d', '#352a25'], ['#3d302a', '#322722']], under: '#1e1512', need: { stars: 45 } },
+    { key: 'night', name: 'Sugaring Night', frame: ['#5a4a7a', '#463862', '#30264a'], tiles: [['#2a2648', '#221f3d'], ['#272345', '#1f1c3a']], under: '#120f22', need: { stars: 90 }, stars: true },
+    { key: 'peak', name: 'Peak Foliage', frame: ['#f2a03a', '#d9741c', '#a84f12'], tiles: [['#4a2a3e', '#3d2233'], ['#47273b', '#3a1f30']], under: '#1f0f18', need: { streak: 7 } },
   ];
   function themeUnlocked(th) {
     if (!th.need) return true;
@@ -86,12 +86,14 @@
     if (game && !L.land && L.bh) { // the landscape sits in the band above the board; the board rests on the ground
       const h = clamp(L.by + L.bh * 0.3, L.H * 0.42, L.H);
       bgX.clearRect(0, 0, L.W, L.H);
-      A.drawScene(bgX, season, L.W, h, { dim: 0.06, extendTo: L.H });
+      A.drawScene(bgX, season, L.W, h, { dim: 0.06, extendTo: L.H, calm: true });
       document.body.style.background = A.SCENE[season].ground;
-    } else { A.drawScene(bgX, season, L.W, L.H, { dim: game ? 0.12 : 0.05 }); document.body.style.background = A.SCENE[season].hill[2]; }
+    } else { A.drawScene(bgX, season, L.W, L.H, { dim: game ? 0.12 : 0.05, calm: !!game }); document.body.style.background = A.SCENE[season].hill[2]; }
   }
   function fitBoard() {
     const s = G.s, hud = $('hud').getBoundingClientRect(), ins = insets();
+    const sr = $('scoreRow').getBoundingClientRect(); // the HUD's last row: callouts go just below it in landscape
+    L.hudB = sr.bottom; L.hudL = sr.left; L.hudR = sr.right;
     let ax, ay, aw, ah;
     if (!L.land) { ay = hud.bottom + 12; ah = L.H - ay - ins.b - 16; ax = 6 + ins.l; aw = L.W - 12 - ins.l - ins.r; }
     else { ax = hud.right + 14; aw = L.W - ax - 12 - ins.r; ay = 10 + ins.t; ah = L.H - ay - 10 - ins.b; }
@@ -108,7 +110,14 @@
     L.m = m;
     const c0 = document.createElement('canvas'); c0.width = Math.round((L.bw + 2 * m) * L.dpr); c0.height = Math.round((L.bh + 2 * m) * L.dpr);
     const c = c0.getContext('2d'); c.scale(L.dpr, L.dpr); c.translate(m, m);
-    const cells = []; for (let i = 0; i < s.w * s.h; i++) if (!s.hole[i]) cells.push([i % s.w, (i / s.w) | 0]);
+    const cells = [], pits = []; // pits: holes inside the play field (cells on both sides in their row or column), filled flat dark so no scenery shows through
+    const live = (x, y) => x >= 0 && y >= 0 && x < s.w && y < s.h && !s.hole[y * s.w + x];
+    const seen = (x, y, dx, dy) => { for (x += dx, y += dy; x >= 0 && y >= 0 && x < s.w && y < s.h; x += dx, y += dy) if (live(x, y)) return true; return false; };
+    for (let i = 0; i < s.w * s.h; i++) {
+      const x = i % s.w, y = (i / s.w) | 0;
+      if (!s.hole[i]) cells.push([x, y]);
+      else if ((seen(x, y, -1, 0) && seen(x, y, 1, 0)) || (seen(x, y, 0, -1) && seen(x, y, 0, 1))) { cells.push([x, y]); pits.push([x, y]); }
+    }
     const blob = (pad, r) => { c.beginPath(); for (const [x, y] of cells) { c.moveTo(x * cs - pad + r, y * cs - pad); c.arcTo(x * cs + cs + pad, y * cs - pad, x * cs + cs + pad, y * cs + cs + pad, r); c.arcTo(x * cs + cs + pad, y * cs + cs + pad, x * cs - pad, y * cs + cs + pad, r); c.arcTo(x * cs - pad, y * cs + cs + pad, x * cs - pad, y * cs - pad, r); c.arcTo(x * cs - pad, y * cs - pad, x * cs + cs + pad, y * cs - pad, r); c.closePath(); } };
     c.save(); c.shadowColor = 'rgba(0,0,0,.5)'; c.shadowBlur = cs * 0.4; c.shadowOffsetY = cs * 0.14; blob(cs * 0.2, cs * 0.18); c.fillStyle = '#24110a'; c.fill('nonzero'); c.restore();
     blob(cs * 0.2, cs * 0.18); c.fillStyle = A.INK; c.fill('nonzero');
@@ -129,14 +138,23 @@
     }
     c.restore();
     blob(cs * 0.04, cs * 0.12); c.fillStyle = th.under; c.fill('nonzero');
+    const isPit = new Set(pits.map(([x, y]) => y * s.w + x));
+    for (const [x, y] of pits) { // flat dark inset with the frame's inner shadow along its top and left
+      const X = x * cs + 1.5, Y = y * cs + 1.5, S = cs - 3, r = cs * 0.16;
+      c.save(); A.rr(c, X, Y, S, S, r); c.clip(); c.fillStyle = '#171a1f'; c.fillRect(X, Y, S, S);
+      c.shadowColor = 'rgba(0,0,0,.7)'; c.shadowBlur = cs * 0.18; c.shadowOffsetX = cs * 0.05; c.shadowOffsetY = cs * 0.08;
+      c.lineWidth = cs * 0.2; c.strokeStyle = '#000'; A.rr(c, X - cs * 0.1, Y - cs * 0.1, S + cs * 0.2, S + cs * 0.2, r * 1.6); c.stroke();
+      c.restore();
+    }
     for (const [x, y] of cells) {
+      if (isPit.has(y * s.w + x)) continue;
       const odd = (x + y) % 2, X = x * cs + 1.5, Y = y * cs + 1.5, S = cs - 3, r = cs * 0.16;
       A.rr(c, X, Y, S, S, r);
       c.fillStyle = A.lg(c, 0, Y, 0, Y + S, [[0, th.tiles[odd][0]], [1, th.tiles[odd][1]]]); c.fill();
       // bevel: light top-left lip, dark bottom-right
       c.save(); A.rr(c, X, Y, S, S, r); c.clip();
-      c.lineWidth = cs * 0.08; c.strokeStyle = 'rgba(0,0,0,.28)'; A.rr(c, X + cs * 0.04, Y + cs * 0.04, S, S, r); c.stroke();
-      c.lineWidth = cs * 0.05; c.strokeStyle = 'rgba(255,255,255,.10)'; A.rr(c, X - cs * 0.02, Y - cs * 0.02, S, S, r); c.stroke();
+      c.lineWidth = cs * 0.08; c.strokeStyle = 'rgba(0,0,0,.14)'; A.rr(c, X + cs * 0.04, Y + cs * 0.04, S, S, r); c.stroke();
+      c.lineWidth = cs * 0.05; c.strokeStyle = 'rgba(255,255,255,.05)'; A.rr(c, X - cs * 0.02, Y - cs * 0.02, S, S, r); c.stroke();
       c.restore();
       if (th.stars && A.prand(x * 13 + y * 7) > 0.55) { c.fillStyle = 'rgba(255,250,220,.35)'; c.beginPath(); c.arc(X + A.prand(x + y * 3) * S, Y + A.prand(x * 5 + y) * S, 1.2, 0, 7); c.fill(); }
     }
@@ -147,7 +165,7 @@
     c.restore();
     L.boardImg = c0;
     const clip = new Path2D();
-    for (const [x, y] of cells) clip.rect(L.bx + x * cs, L.by + y * cs, cs, cs);
+    for (const [x, y] of cells) if (!isPit.has(y * s.w + x)) clip.rect(L.bx + x * cs, L.by + y * cs, cs, cs);
     L.clip = clip;
   }
   const cellX = i => i % G.s.w, cellY = i => (i / G.s.w) | 0;
@@ -163,7 +181,7 @@
 
   // ---------------------------------------------------------------- sprites
   function makeSprite(q, x, y) {
-    const sp = { id: q.id, t: q.t, k: q.k, ice: q.ice, x, y, vy: 0, falling: false, ty: y, tx: x, delay: 0, sx: 1, sy: 1, scale: 1, alpha: 1, pop: -1, exit: -1, flash: 0, tw: null, phase: Math.random() * 6, wig: 0, popTo: null, exitOnLand: false, hop: -1 };
+    const sp = { id: q.id, t: q.t, k: q.k, ice: q.ice, x, y, vy: 0, falling: false, ty: y, tx: x, delay: 0, sx: 1, sy: 1, scale: 1, alpha: 1, pop: -1, exit: -1, flash: 0, tw: null, phase: Math.random() * 6, wig: 0, popTo: null, exitOnLand: false };
     G.sprites.set(q.id, sp); return sp;
   }
   function rebuildSprites(dropIn) {
@@ -172,10 +190,10 @@
       const q = s.p[i]; if (!q) continue;
       const x = cellX(i), y = cellY(i);
       const sp = makeSprite(q, x, dropIn ? y - s.h - 1 - Math.random() * 0.6 : y);
-      if (dropIn) { sp.ty = y; sp.falling = true; sp.delay = x * 0.035 + (s.h - y) * 0.03; }
+      if (dropIn) { sp.ty = y; sp.falling = true; sp.fall0 = sp.y; sp.delay = x * 0.035 + (s.h - y) * 0.03; }
     }
   }
-  function setFall(sp, to) { sp.tx = cellX(to); sp.ty = cellY(to); sp.x = sp.tx; if (sp.ty > sp.y + 0.001) { sp.falling = true; } else { sp.y = sp.ty; } }
+  function setFall(sp, to) { sp.tx = cellX(to); sp.ty = cellY(to); sp.x = sp.tx; if (sp.ty > sp.y + 0.001) { if (!sp.falling) sp.fall0 = sp.y; sp.falling = true; } else { sp.y = sp.ty; } }
   function tween(sp, tx, ty, dur, ease, back) { sp.tw = { fx: sp.x, fy: sp.y, tx, ty, t0: G.t, dur, ease: ease || easeInOut, back }; }
 
   // ---------------------------------------------------------------- particles + fx
@@ -186,9 +204,25 @@
       G.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - (opts.up || 0), life: 0, max: (opts.life || 0.6) * (0.6 + Math.random() * 0.6), color: Array.isArray(color) ? color[k % color.length] : color, size: (opts.size || 4) * (0.6 + Math.random() * 0.8), g: opts.g === undefined ? 900 : opts.g, kind: opts.kind || 'dot', rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12 });
     }
   }
-  function callout(text, big) {
+  function callout(text, big, cool, dur) {
+    if (G.chain && !G.chain.end) { G.chainQ = [text, big, cool]; return; } // the chain counter owns the strip; say it when the chain ends
     G.fx = G.fx.filter(f => f.kind !== 'callout');
-    G.fx.push({ kind: 'callout', text, t0: G.t, dur: big ? 1300 : 1000, big });
+    G.fx.push({ kind: 'callout', text, t0: G.t, dur: dur || (big ? 1300 : 1000), big, cool });
+  }
+  /** A chain just finished: one word for the whole chain, picked by how long it ran, then anything held back. */
+  function chainEnd(n) {
+    const q = G.chainQ; G.chainQ = null;
+    const w = n >= 3 ? CASCADE_WORDS[Math.min(n, 6)] : '';
+    if (w) { callout(w, n >= 4, false, 1400); Snd.callout(n); if (q) { const gen = G.gen; after(1000, () => { if (G.gen === gen && !G.fx.some(f => f.kind === 'callout' && f.text !== w)) callout(q[0], q[1], q[2]); }); } }
+    else if (q) callout(q[0], q[1], q[2]);
+  }
+  /** Words and the chain counter live in the strip just above the board frame, never over the pieces. */
+  function strip() {
+    const cs = L.cs;
+    if (!L.land && L.by - L.hudB >= cs * 1.5) return { x: L.bx + L.bw / 2, y: L.by - cs * 0.9, w: L.bw, h: cs * 0.8, room: (L.by - L.hudB - cs * 0.9) / 0.5 }; // room: the biggest font whose glyphs (with the punch) stay clear of the HUD
+    if (L.land) { const w = L.hudR - L.hudL; return { x: (L.hudL + L.hudR) / 2, y: Math.min(L.H - cs, L.hudB + cs * 0.9), w, h: cs * 0.8, room: cs * 1.2 }; }
+    const h = Math.min(cs * 0.6, L.m * 1.4); // short band: ride the top frame edge
+    return { x: L.bx + L.bw / 2, y: L.by - L.m * 0.55, w: L.bw, h, room: h * 1.2 };
   }
   function floater(text, x, y, color) { G.fx.push({ kind: 'float', text, x, y, t0: G.t, dur: 1000, color: color || '#ffe766' }); }
   function shake(a) { G.shake = Math.max(G.shake, a); }
@@ -261,25 +295,27 @@
     const s = G.s; if (!s) return;
     $('moves').textContent = G.dispMoves;
     let lab = '';
-    if (G.lv.daily && !s.won) { // daily stars come from moves to spare: say so on the bar
-      const a3 = Math.ceil(G.lv.moves * 0.45), a2 = Math.ceil(G.lv.moves * 0.25);
-      lab = G.dispMoves >= a3 ? `Finish with ${a3}+ moves left for ★★★` : G.dispMoves >= a2 ? `Finish with ${a2}+ moves left for ★★` : 'Finish for ★';
+    if (!G.lv.boil && !s.won) { // stars come from moves to spare: say so on the bar from move one
+      const [a2, a3] = starMoves();
+      const n = G.dispMoves >= a3 ? a3 : G.dispMoves >= a2 ? a2 : 0, st = G.dispMoves >= a3 ? '★★★' : '★★';
+      lab = !n ? 'Finish for ★' : L.land ? `${n}+ moves left: ${st}` : `Finish with ${n}+ moves left for ${st}`;
     } else if (G.lv.boil) { const nx = nextGrade(G.dispScore), gr = gradeFor(G.dispScore); lab = nx ? `${gr ? gr.n + ' · ' : ''}next: ${nx.n} at ${fmt(nx.s)}` : `${gr.n}!`; }
-    $('barLabel').textContent = lab; $('scoreBar').classList.toggle('labelled', !!lab); $('scoreBar').classList.toggle('dailybar', !!G.lv.daily);
+    $('barLabel').textContent = lab; $('barInk').textContent = lab; $('scoreBar').classList.toggle('labelled', !!lab); $('scoreBar').classList.toggle('dailybar', !G.lv.boil);
     $('movesBox').classList.toggle('low', G.dispMoves <= 5 && !s.won);
     refreshGoals($('goals'), bump);
     const sc = G.dispScore;
     $('score').textContent = fmt(sc);
     const ng = nextGrade(sc), pg = gradeFor(sc);
-    const st = G.lv.stars || [0, 1, 2], top = G.lv.boil ? (ng ? ng.s : sc || 1) : G.lv.daily ? Math.max(15000, (save.daily[G.lv.daily] || {}).best || 0) : st[2] * 1.08;
-    $('scoreFill').style.width = (G.lv.daily ? 0 : G.lv.boil ? clamp((sc - (pg ? pg.s : 0)) / (top - (pg ? pg.s : 0)) * 100, 0, 100) : clamp(sc / top * 100, 0, 100)) + '%';
-    for (let k = 0; k < 3; k++) {
-      if (G.lv.daily || G.lv.boil) { $('mk' + k).classList.add('hidden'); continue; }
-      const mk = $('mk' + k);
-      mk.style.left = (st[k] / top * 100) + '%';
-      mk.classList.toggle('hidden', k === 0 && !st[0]); mk.classList.remove('hidden-d');
-      mk.classList.toggle('on', k === 0 ? (st[0] ? sc >= st[0] : s.won && G.ending) : sc >= st[k]);
-    }
+    const top = ng ? ng.s : sc || 1; // only Boil Down fills the bar (toward the next grade); levels show the star rule instead
+    const fill = G.lv.boil ? clamp((sc - (pg ? pg.s : 0)) / (top - (pg ? pg.s : 0)) * 100, 0, 100) : 0;
+    $('scoreFill').style.width = fill + '%';
+    $('barInk').style.clipPath = `inset(0 ${100 - fill}% 0 0)`; // dark copy of the label over the gold fill, so it reads on both
+    for (let k = 0; k < 3; k++) $('mk' + k).classList.add('hidden');
+  }
+  /** Moves left at the win needed for 2 and 3 stars. */
+  function starMoves() {
+    if (G.lv.daily) return [Math.ceil(G.lv.moves * 0.25), Math.ceil(G.lv.moves * 0.45)];
+    return G.lv.stars && G.lv.stars.length === 2 ? G.lv.stars : [Math.ceil(G.lv.moves * 0.25), Math.ceil(G.lv.moves * 0.45)];
   }
 
   // ---------------------------------------------------------------- screens
@@ -302,7 +338,8 @@
     const today = MMAI.dateKey(), d = save.daily[today];
     const streak = liveStreak();
     $('btnDaily').classList.toggle('done', !!d);
-    $('dailySub').textContent = d ? `${'★'.repeat(d.stars)} · best ${fmt(d.best)}` : streak ? `Streak ${streak} · play today` : 'New board today';
+    $('dailySub').textContent = dailyWant ? 'Tapping today\'s trees…' : d ? `${'★'.repeat(d.stars)} · best ${fmt(d.best)}` : streak ? `Streak ${streak} · play today` : 'New board today';
+    prepDaily();
     let dots = '';
     for (let k = 6; k >= 0; k--) { const [y, m, dd] = today.split('-').map(Number), key = MMAI.dateKey(new Date(y, m - 1, dd - k)); dots += `<i class="${save.daily[key] ? 'on' : ''}${k === 0 ? ' today' : ''}"></i>`; }
     $('dailyWeek').innerHTML = dots;
@@ -388,19 +425,16 @@
   }
 
   // ---------------------------------------------------------------- level flow
-  const HEAT_MULT = [1, 1, 1.5, 2, 2.5, 3];
+  const HEAT_MULT = R.HEAT_MULT;
   // Boil Down grades, named after real maple syrup grades
-  const GRADES = [{ n: 'Golden', s: 8000 }, { n: 'Amber', s: 16000 }, { n: 'Dark', s: 26000 }, { n: 'Very Dark', s: 40000 }, { n: 'Sugarmaker', s: 60000 }];
+  // set from 300 smart-bot runs (tools/boil-check.js, two 300-run passes averaged): its 20th / 45th / 70th / 90th / 99th percentile score
+  const GRADES = [{ n: 'Golden', s: 30000 }, { n: 'Amber', s: 45000 }, { n: 'Dark', s: 65000 }, { n: 'Very Dark', s: 100000 }, { n: 'Sugarmaker', s: 170000 }]; // tools/boil-check.js: casual bot reaches them 79 / 44 / 15 / 2 / 0%, smart bot 97 / 77 / 47 / 13 / 2%
   function gradeFor(score) { let g = null; for (const x of GRADES) if (score >= x.s) g = x; return g; }
   function nextGrade(score) { return GRADES.find(x => score < x.s) || null; }
   function boilBest() { const key = MMAI.dateKey(), b = save.boil || {}; return { today: b.day === key ? b.today : 0, ever: b.ever || 0 }; }
   function startBoil() {
-    const key = MMAI.dateKey(), rnd = MMAI.mulberry(MMAI.hash('boil:' + key));
-    const types = [0, 1, 2, 3, 4, 5].sort(() => rnd() - 0.5).slice(0, 5).sort();
-    const month = +key.slice(5, 7) - 1;
-    const season = [0, 1, 2, 11].includes(month) ? 'march' : [3, 4].includes(month) ? 'mud' : [5, 6, 7].includes(month) ? 'summer' : 'october';
     // today's pieces and season stay fixed; the board itself is fresh each run, so it's skill, not memory
-    startLevel({ id: 'boil', boil: key, name: 'Boil Down', season, types, moves: 25, goals: [{ type: 'score', n: 1e9 }], layout: Array(8).fill('........') }, (Math.random() * 1e9) | 0);
+    startLevel(MMAI.boilLevel(MMAI.dateKey()), (Math.random() * 1e9) | 0);
   }
   function showBoilEnd() {
     const s = G.s, key = G.lv.boil, b = save.boil && save.boil.day === key ? save.boil : { day: key, today: 0, ever: (save.boil || {}).ever || 0 };
@@ -415,16 +449,40 @@
     const gr = gradeFor(s.score), nx = nextGrade(s.score);
     if (gr && (!save.bestGrade || GRADES.findIndex(x => x.n === gr.n) > GRADES.findIndex(x => x.n === save.bestGrade))) save.bestGrade = gr.n;
     writeSave();
-    $('winSub').textContent = `${newEver ? 'New best ever! · ' : newToday ? 'Best today! · ' : 'Best today ' + fmt(b.today) + ' · '}${nx ? fmt(nx.s - s.score) + ' more for ' + nx.n : 'top grade'} · top heat ×${HEAT_MULT[G.heatPeak]}`;
+    $('winSub').textContent = `${newEver ? 'New best ever! · ' : newToday ? 'Best today! · ' : 'Best today ' + fmt(b.today) + ' · '}${nx ? fmt(nx.s - s.score) + ' more for ' + nx.n : 'top grade'} · ${s.movesUsed} moves played · top heat ×${HEAT_MULT[G.heatPeak]}`;
     $('winUnlock').classList.add('hidden');
     const N = 24; for (let k = 0; k <= N; k++) after(k * 32, () => { $('winScore').textContent = fmt(Math.round(s.score * k / N)); if (k % 3 === 0) Snd.tick(k / 3); });
     Snd.win();
   }
-  function startDaily() {
-    const key = MMAI.dateKey();
-    startLevel(MMAI.dailyCandidate(key), MMAI.hash(key) % 1000000 + 1);
+  // Today's budget comes from a bot pass (MMAI.budgetDaily, a second or two on a phone), worked out in a worker
+  // as soon as the page loads and kept for the day, so the Daily button almost never has to wait.
+  const DAILY_V = 2; // bump when the budget rule changes so cached budgets are recomputed
+  let dailyWorker = null, dailyWant = null;
+  function dailyBudget(key) { const b = save.dailyBudget; return b && b.key === key && b.v === DAILY_V ? b.moves : 0; }
+  function gotDailyBudget(key, moves) {
+    save.dailyBudget = { key, moves, v: DAILY_V }; writeSave();
+    if (dailyWant && dailyWant.key === key && G.screen === 'title') { const q = dailyWant.quick; dailyWant = null; startDaily(q); }
+    else if (G.screen === 'title') refreshTitle();
   }
-  function startLevel(id, seed) {
+  function prepDaily() {
+    const key = MMAI.dateKey();
+    if (dailyBudget(key) || (dailyWorker && dailyWorker.key === key)) return;
+    const local = () => setTimeout(() => gotDailyBudget(key, MMAI.makeDaily(key).moves), 30);
+    try {
+      const w = new Worker('daily-worker.js'); dailyWorker = { w, key };
+      w.onmessage = e => { w.terminate(); dailyWorker = null; gotDailyBudget(e.data.key, e.data.moves); };
+      w.onerror = e => { e.preventDefault(); w.terminate(); dailyWorker = null; local(); };
+      w.postMessage(key);
+    } catch (e) { local(); }
+  }
+  function startDaily(quick) {
+    const key = MMAI.dateKey(), moves = dailyBudget(key);
+    if (!moves) { dailyWant = { key, quick }; if (G.screen !== 'title') showScreen('title'); prepDaily(); refreshTitle(); return; } // the button says it is getting the board ready
+    dailyWant = null;
+    const lv = MMAI.dailyCandidate(key); lv.moves = moves;
+    startLevel(lv, MMAI.hash(key) % 1000000 + 1, quick);
+  }
+  function startLevel(id, seed, quick) {
     G.gen++; G.timers = []; G.waits = []; G.fx = []; G.parts = [];
     const lv = typeof id === 'object' ? id : LEVELS[id - 1];
     G.lv = lv; G.seed = seed || ((Math.random() * 1e9) | 0);
@@ -438,9 +496,16 @@
     updateHUD(false);
     $('tip').classList.add('hidden');
     fitBoard();
+    G.chain = null; G.chainQ = null; G.tempo = 1;
+    if (quick) { // Try again: pieces pop in where they stand, no intro card, swipeable right away
+      rebuildSprites(false);
+      for (const sp of G.sprites.values()) { sp.scale = 0; sp.grow = -(sp.x + sp.y) * 0.022 / 0.28; }
+      G.busy = false;
+      return;
+    }
     rebuildSprites(true);
     G.busy = true;
-    G.fx.push({ kind: 'intro', t0: G.t, dur: 1800, title: lv.daily ? 'Daily' : lv.boil ? 'Today' : `Level ${lv.id}`, lines: lv.boil ? [lv.moves + ' moves: score all you can.', 'Make a special every move for heat.'] : G.s.goals.map(goalText) });
+    G.fx.push({ kind: 'intro', t0: G.t, dur: 1800, title: lv.daily ? 'Daily' : lv.boil ? 'Today' : `Level ${lv.id}`, lines: lv.boil ? [lv.moves + ' moves to start.', 'Score all you can.', 'Every special you make: +1 move.'] : G.s.goals.map(goalText) });
     whenSettled(() => {
       G.busy = false;
       if (lv.tip && !save.tips[lv.id]) { save.tips[lv.id] = 1; writeSave(); showTip(lv.tip); }
@@ -468,7 +533,6 @@
     if (pa.ice || pb.ice) { // frozen: a little shiver
       [spA, spB].forEach(sp => { if (sp && sp.ice) sp.wig = 1; }); Snd.bonk(); return;
     }
-    if (G.lv.boil) s.mult = HEAT_MULT[G.heat];
     const res = R.trySwap(s, a, b);
     const ax = cellX(a), ay = cellY(a), bX = cellX(b), bY = cellY(b);
     if (!res.ok) {
@@ -478,18 +542,27 @@
       return;
     }
     G.busy = true; Snd.swap();
-    if (G.lv.boil) { // Boil Down: a move that makes or sets off a special keeps the heat rising
-      const hot = res.steps.some(st => st.blasts.length || st.combo || st.created.some(c => !c.morph));
-      const combo = res.steps.some(st => st.combo);
-      const before = G.heat;
-      G.heat = combo ? Math.min(5, G.heat + 2) : hot ? Math.min(5, G.heat + 1) : Math.max(1, G.heat - 1);
-      G.heatPeak = Math.max(G.heatPeak, G.heat);
-      if (G.heat > before) after(400, () => { callout('Heat ×' + HEAT_MULT[G.heat] + '!'); Snd.callout(G.heat); });
-      else if (G.heat < before) after(300, () => { Snd.cool(); floater('Heat cooling…', L.bx + L.bw / 2, L.by - L.cs * 0.1, '#bfe6ff'); const h = $('goals'); h.classList.remove('cool'); void h.offsetWidth; h.classList.add('cool'); });
+    let gained = 0;
+    if (G.lv.boil) { // Boil Down: heat and move rewards come from the rules (R.boilAward); here we only show them
+      const b = s.boil, before = G.heat, sc0 = s.score - res.steps.reduce((a, st) => a + st.score, 0);
+      G.heat = b.heat; G.heatPeak = b.peak; gained = b.gained;
+      if (G.heat > before) after(400, () => { if (G.heat === 5) callout('Full boil ×3!'); Snd.callout(G.heat); });
+      else if (G.heat < before) after(300, () => { Snd.cool(); const h = $('goals'); h.classList.remove('cool'); void h.offsetWidth; h.classList.add('cool'); });
+      if (b.thickNow) after(700, () => { callout("Pan's getting thick!", false, true); Snd.callout(3); });
+      if (sc0 < R.BOIL.strictAt && s.score >= R.BOIL.strictAt) after(900, () => { callout('Specials pay at ×2 heat now', false, true); });
+      if (gained) { // "+1" flies into the MOVES box
+        const made = res.steps.flatMap(st => st.created.filter(c => !c.morph).map(c => c.i));
+        const [fx, fy] = made.length ? cellCenter(made[0]) : [L.bx + L.bw / 2, L.by + L.bh / 2];
+        after(320, () => {
+          const mb = $('movesBox').getBoundingClientRect();
+          G.fx.push({ kind: 'plus', text: '+' + gained, x0: fx, y0: fy, x1: mb.left + mb.width / 2, y1: mb.top + mb.height * 0.62, t0: G.t, dur: 560 });
+          after(560, () => { G.dispMoves = Math.min(G.s.movesLeft, G.dispMoves + gained); updateHUD(false); const m = $('movesBox'); m.classList.remove('bump'); void m.offsetWidth; m.classList.add('bump'); Snd.tick(4); });
+        });
+      }
     }
-    tween(spA, bX, bY, 150, easeOut); tween(spB, ax, ay, 150, easeOut);
-    G.dispMoves = s.movesLeft; updateHUD(false);
-    after(150, () => runSteps(res.steps, () => afterMove(res)));
+    tween(spA, bX, bY, SWAP_MS, easeOut); tween(spB, ax, ay, SWAP_MS, easeOut);
+    G.dispMoves = s.movesLeft - gained; updateHUD(false); G.tempo = 1;
+    after(SWAP_MS, () => runSteps(res.steps, () => afterMove(res)));
   }
   function afterMove(res) {
     const done = () => {
@@ -504,7 +577,7 @@
         if (steps.length) { callout('Last Boil!', true); Snd.win(); after(500, () => runSteps(steps, () => after(500, showBoilEnd))); }
         else after(600, showBoilEnd);
       }
-      else if (G.s.lost) { G.ending = true; after(600, showLose); }
+      else if (G.s.lost) { G.ending = true; after(350, showLose); }
       else if (G.queued && G.t - G.queued.t < 3000) { const q = G.queued; G.queued = null; attemptSwap(q.a, q.b); }
       G.queued = null;
     };
@@ -528,18 +601,23 @@
   }
 
   // ---------------------------------------------------------------- playing back rule steps
+  // Playback tempo. Each cascade step plays a little quicker than the one before, so a long chain speeds up.
+  const POP_MS = 180, STAGGER_MS = 50, GAP_MS = 30, SWAP_MS = 120, GRAV = 90, MAXV = 30;
+  const tempoFor = c => Math.max(0.55, 1 - 0.1 * (Math.max(1, c) - 1));
   function runSteps(steps, done) {
     let i = 0;
     const next = () => {
-      if (i >= steps.length) { whenSettled(done); return; }
+      if (i >= steps.length) { G.tempo = 1; if (G.chain && !G.chain.end) { G.chain.end = G.t; chainEnd(G.chain.n); } whenSettled(done); return; }
       const st = steps[i++];
       if (st.transform) { G.dispScore += st.score || 0; after(animateTransform(st), next); return; }
+      G.tempo = st.rush ? 0.55 : tempoFor(st.c); // the end bonus always plays at the quickest tempo
+      if (st.c >= 2 && !st.rush && !st.combo) G.chain = { n: st.c, t0: G.t, end: 0 };
       stepDisplay(st);
       const popDur = animatePops(st);
       after(popDur, () => {
         animateCreated(st);
         animateFalls(st);
-        whenSettled(() => after(30, next));
+        whenSettled(() => after(GAP_MS * G.tempo, next));
       });
     };
     next();
@@ -552,26 +630,27 @@
     for (const m of st.matches) if (m.at >= 0) for (const c of m.cells) mergeTo[c] = m.at;
     if (st.matches.length) { const big = Math.max(...st.matches.map(m => m.size)); Snd.pop(st.c, big, st.matches[0].t); Snd.haptic(st.c > 1 ? 14 : 8); }
     if (st.combo) {
-      callout(st.combo, true); Snd.combo(); shake(16); G.hitstop = 90; Snd.haptic(45); G.fx.push({ kind: 'flash', t0: G.t, dur: 320 });
-      if (st.center >= 0) { const [cx, cy] = cellCenter(st.center); G.fx.push({ kind: 'ring', x: cx, y: cy, r0: cs * 0.5, r1: cs * 6, t0: G.t, dur: 700, color: '#fff4dc', thick: true }); burst(cx, cy, ['#ffc94a', '#ec4a1f', '#fff4dd', '#a35ad6', '#69c23a'], 40, cs * 12, { size: cs * 0.14, life: 0.9, kind: 'leaf', up: cs * 2 }); }
+      callout(st.combo, true); Snd.combo(); shake(14); G.hitstop = 90; Snd.haptic(45); G.fx.push({ kind: 'flash', t0: G.t, dur: 280 });
+      if (st.center >= 0) { const [cx, cy] = cellCenter(st.center); G.fx.push({ kind: 'ring', x: cx, y: cy, r0: cs * 0.5, r1: cs * 6, t0: G.t, dur: 600, color: '#fff4dc', thick: true }); burst(cx, cy, ['#ffe08a', '#fff4dd', '#ffb21e'], 22, cs * 11, { size: cs * 0.1, life: 0.6, kind: 'spark', g: 300 }); }
     }
-    else if (st.c >= 2 && !st.rush) { const w = CASCADE_WORDS[Math.min(st.c, 6)]; if (w) { callout(w, st.c >= 4); Snd.callout(st.c); } if (st.c >= 4) shake(7); }
+    else if (st.c >= 4 && !st.rush) shake(7); // the counter shows the chain; its one word comes at the end (chainEnd)
     const goalTypes = new Set(G.s.goals.filter(g => g.type === 'collect').map(g => g.t));
     let tokens = 0;
-    for (const b of st.blasts) { maxO = Math.max(maxO, b.o); after(b.o * 75, () => blastFx(b)); }
+    const stag = STAGGER_MS * G.tempo;
+    for (const b of st.blasts) { maxO = Math.max(maxO, b.o); after(b.o * stag, () => blastFx(b)); }
     for (const r of st.removed) {
       const sp = G.sprites.get(r.id); if (!sp) continue;
       maxO = Math.max(maxO, r.o);
       sp.dying = true;
       const [cx, cy] = cellCenter(r.i); sumX += cx; sumY += cy; n++;
       const toCell = r.by === 'merge' ? r.i : mergeTo[r.i];
-      const delay = r.o * 75;
+      const delay = r.o * stag;
       after(delay, () => {
-        sp.pop = 0; sp.flash = 1;
+        sp.pop = 0; sp.popDur = POP_MS / 1000 * G.tempo; sp.flash = 1;
         if (toCell !== undefined) sp.popTo = [cellX(toCell), cellY(toCell)];
         const t = r.t >= 0 ? r.t : 3;
-        burst(cx, cy, [A.COLORS[t], A.LIGHT[t], '#fff'], r.by === 'merge' ? 4 : 10, cs * 6.5, { size: cs * 0.13, life: 0.6, kind: t === 2 ? 'leaf' : r.by === 'match' ? 'dot' : 'drop', up: cs * 1.5 });
-        if (r.by !== 'merge') G.fx.push({ kind: 'ring', x: cx, y: cy, r0: cs * 0.15, r1: cs * 0.62, t0: G.t, dur: 260, color: A.LIGHT[t] });
+        burst(cx, cy, [A.COLORS[t], A.LIGHT[t], '#fff'], r.by === 'merge' ? 2 : 5, cs * 6, { size: cs * 0.13, life: 0.4, kind: r.by === 'match' ? 'dot' : 'drop', up: cs * 1.5 });
+        if (r.by === 'blast' || r.k !== K.N) G.fx.push({ kind: 'ring', x: cx, y: cy, r0: cs * 0.15, r1: cs * 0.62, t0: G.t, dur: 240, color: A.LIGHT[t] });
         if (goalTypes.has(r.t) && tokens++ < 14) flyToGoal(r.t, cx, cy);
       });
     }
@@ -587,7 +666,8 @@
     }
     if (st.score && n) floater('+' + st.score, sumX / n, sumY / n - cs * 0.2, st.c >= 3 ? '#ffb4f0' : '#ffe48a');
     after(60, () => updateHUD(true));
-    return 220 + maxO * 75;
+    G.matchX = n ? (sumX / n - L.bx) / cs - 0.5 : -1; // column the falls ripple out from
+    return (POP_MS + maxO * STAGGER_MS) * G.tempo;
   }
   function animateCreated(st) {
     for (const c of st.created) {
@@ -603,12 +683,13 @@
     }
   }
   function animateFalls(st) {
-    const s = G.s;
-    for (const f of st.falls) { const sp = G.sprites.get(f.id); if (sp) setFall(sp, f.to); }
+    const s = G.s, mx = G.matchX;
+    const ripple = sp => { if (sp.falling && mx >= 0) sp.delay = Math.min(0.08, 0.02 * Math.abs(sp.tx - mx)); };
+    for (const f of st.falls) { const sp = G.sprites.get(f.id); if (sp) { setFall(sp, f.to); ripple(sp); } }
     for (const e of st.spawns) {
       const x = cellX(e.to), top = cellY(s.cols[x][0]);
       const sp = makeSprite(e.piece, x, top - e.off - 0.15);
-      setFall(sp, e.to);
+      setFall(sp, e.to); ripple(sp);
     }
     for (const c of st.collected) {
       const sp = G.sprites.get(c.id); if (!sp) continue;
@@ -631,7 +712,7 @@
     if (st.combo) { callout(st.combo, true); Snd.combo(); shake(10); }
     if (st.rush) { callout("Sap's Running!", true); Snd.win(); }
     st.created.forEach((c, k) => {
-      const delay = st.rush ? 350 + k * 80 : 120 + k * 30;
+      const delay = st.rush ? 120 + k * 35 : 120 + k * 30;
       dur = Math.max(dur, delay + 260);
       after(delay, () => {
         const sp = G.sprites.get(c.piece.id); if (!sp) return;
@@ -649,7 +730,7 @@
       });
     });
     if (st.rush && st.score) after(dur, () => updateHUD(false));
-    return dur + (st.rush ? 250 : 120);
+    return dur + (st.rush ? 40 : 120); // the bonus fires as soon as the last move has turned
   }
   function blastFx(b) {
     const cs = L.cs, [cx, cy] = cellCenter(b.i);
@@ -678,7 +759,7 @@
 
   // ---------------------------------------------------------------- win / lose
   function startWin() {
-    G.ending = true; G.busy = true;
+    G.ending = true; G.busy = true; G.bonusMs = 0;
     const lv = G.lv;
     G.winLeft = G.s.movesLeft;
     G.themesBefore = THEMES.filter(themeUnlocked).length;
@@ -686,15 +767,14 @@
     else { save.unlocked = Math.max(save.unlocked, Math.min(LEVELS.length, lv.id + 1)); save.stars[lv.id] = Math.max(save.stars[lv.id] || 0, 1); }
     writeSave();
     callout("Sugarin' Off!", true); Snd.win(); Snd.haptic(30);
-    for (let k = 0; k < 4; k++) after(k * 180, () => burst(L.bx + Math.random() * L.bw, L.by + Math.random() * L.bh * 0.6, ['#ffc94a', '#ec4a1f', '#fff4dd', '#69c23a', '#a35ad6'], 24, L.cs * 8, { size: L.cs * 0.1, life: 1, kind: 'leaf', up: L.cs * 3 }));
-    after(700, () => {
+    burst(L.bx + L.bw / 2, L.by + L.bh * 0.35, ['#ffc94a', '#fff4dd', '#ffb21e'], 26, L.cs * 9, { size: L.cs * 0.1, life: 0.8, kind: 'spark', up: L.cs * 3, g: 500 });
+    after(250, () => {
       const steps = R.sugarRush(G.s);
-      runSteps(steps, () => after(500, showWin));
+      runSteps(steps, () => after(200, showWin));
     });
   }
-  function starsFor(score) {
-    if (G.lv.daily) { const f = G.winLeft / G.lv.moves; return 1 + (f >= 0.25 ? 1 : 0) + (f >= 0.45 ? 1 : 0); } // daily: stars for moves to spare
-    const st = G.lv.stars || [0, 1e9, 1e9]; return 1 + (score >= st[1] ? 1 : 0) + (score >= st[2] ? 1 : 0);
+  function starsFor() { // stars for moves to spare (path levels and daily alike)
+    const [a2, a3] = starMoves(); return 1 + (G.winLeft >= a2 ? 1 : 0) + (G.winLeft >= a3 ? 1 : 0);
   }
   /** Save a daily win and advance the day streak. */
   function recordDaily(stars, score) {
@@ -708,7 +788,7 @@
   }
   function showWin() {
     G.fast = false;
-    const lv = G.lv, s = G.s, stars = starsFor(s.score);
+    const lv = G.lv, s = G.s, stars = starsFor();
     const prevBest = lv.daily ? (save.daily[lv.daily] || {}).prevBest || 0 : save.best[lv.id] || 0;
     syncDisplay();
     if (lv.daily) recordDaily(stars, s.score);
@@ -721,7 +801,7 @@
     $('winTitle').textContent = lv.daily ? 'Daily done!' : last ? 'You finished the year!' : ['Level clear!', 'Nicely done!', 'Wicked good!'][stars - 1];
     $('wNext').querySelector('.bt').textContent = lv.daily ? 'Done' : last ? 'Maple Path' : 'Next level';
     $('wMap').textContent = 'Maple Path'; $('wMap').classList.toggle('hidden', !!lv.daily);
-    $('winSub').textContent = lv.daily ? `Day streak ${save.streak} · today's best ${fmt(save.daily[lv.daily].best)}${stars < 3 ? ' · replay for ★★★' : ''}` : s.score > prevBest && prevBest ? 'New best!' : 'Best ' + fmt(Math.max(prevBest, s.score));
+    $('winSub').textContent = lv.daily ? `Day streak ${save.streak} · today's best ${fmt(save.daily[lv.daily].best)}${stars < 3 ? ' · replay for ★★★' : ''}` : `${G.winLeft} move${G.winLeft === 1 ? '' : 's'} to spare${stars < 3 ? ` · ★★★ needs ${starMoves()[1]}` : ''} · ${s.score > prevBest && prevBest ? 'New best!' : 'Best ' + fmt(Math.max(prevBest, s.score))}`;
     const newThemes = THEMES.filter(themeUnlocked).length > G.themesBefore ? THEMES.filter(themeUnlocked).slice(G.themesBefore) : [];
     $('winUnlock').textContent = newThemes.length ? 'New board unlocked: ' + newThemes.map(t => t.name).join(', ') + '!' : '';
     $('winUnlock').classList.toggle('hidden', !newThemes.length);
@@ -735,11 +815,12 @@
     const el = $('loseGoals'); buildGoals(el, 46);
     syncDisplay(); refreshGoals(el, false);
     const left = G.s.goals.reduce((a, g) => a + (goalLeft(g, true) > 0 ? 1 : 0), 0);
-    const prog = R.goalProgress(G.s);
     const miss = G.s.goals.filter(g => goalLeft(g, true) > 0);
     const words = miss.map(g => { const n = goalLeft(g, true); return g.type === 'collect' ? `${n} ${GOAL_WORD[g.t]}` : g.type === 'frost' ? `${n} frozen` : g.type === 'bucket' ? `${n} bucket${n > 1 ? 's' : ''}` : `${fmt(n)} points`; });
     const tip = miss.some(g => g.type === 'bucket') ? 'Tip: drag a bucket down when nothing else helps.' : miss.some(g => g.type === 'frost') ? 'Tip: line clearers crack a whole row of frost.' : 'Tip: make 4s and 5s, then swap two specials together.';
-    $('loseSub').innerHTML = `<b class="near">${prog > 0.85 ? 'So close! ' : ''}Only ${words.join(' + ')} to go.</b><br>${tip}<br><small>Score ${fmt(G.s.score)}</small>`;
+    const near = miss.some(g => goalLeft(g, true) <= Math.max(1, g.n * 0.1)); // one goal within 10% of done
+    $('loseTitle').textContent = near ? 'So close!' : 'Out of moves';
+    $('loseSub').innerHTML = `<b class="near">Only ${words.join(' + ')} to go.</b><br>${tip}<br><small>Score ${fmt(G.s.score)}</small>`;
     $('lMap').textContent = G.lv.daily ? 'Home' : 'Maple Path';
     openOverlay('lose'); Snd.lose();
   }
@@ -816,6 +897,14 @@
   }
 
   // ---------------------------------------------------------------- update
+  const HINT_MS = 10000;
+  /** Advance game time. The end-of-level bonus plays at 1.8x, or 8x after a tap or once it has run 2.5 s (so it never passes ~3 s). */
+  function advance(dt) {
+    if (G.ending && !G.overlay && G.s && G.s.won && !G.fast && (G.bonusMs = (G.bonusMs || 0) + dt) > 2500) G.fast = true;
+    const sp = G.ending && !G.overlay && G.s && G.s.won ? (G.fast ? 8 : 1.8) : G.fast && G.ending && !G.overlay ? 8 : 1;
+    let rem = dt * sp;
+    while (rem > 0.001) { const d = Math.min(dt, rem, 16); tick(d); rem -= d; }
+  }
   function tick(dt) {
     G.t += dt;
     // timers
@@ -833,26 +922,16 @@
     G.parts = G.parts.filter(p => p.life < p.max);
     G.fx = G.fx.filter(f => G.t - f.t0 < f.dur);
     if (G.screen === 'game' && G.lv) updateAmbient(sec);
-    // idle life: now and then one piece gives a little hop
-    if (G.screen === 'game' && G.s && !G.busy && !G.overlay) {
-      G.hopT = (G.hopT || 0) - dt;
-      if (G.hopT <= 0) {
-        G.hopT = 700 + Math.random() * 1100;
-        const list = [...G.sprites.values()].filter(sp => !sp.ice && sp.k !== K.BUCKET && sp.hop < 0 && !sp.falling);
-        if (list.length) list[(Math.random() * list.length) | 0].hop = 0;
-      }
-    }
     G.shake *= Math.exp(-sec * 11); if (G.shake < 0.2) G.shake = 0;
     if (G.tipUntil && G.t > G.tipUntil) hideTip();
     // idle hint
     if (G.screen === 'game' && G.s && !G.busy && !G.ending && !G.overlay && !G.ptr) {
       G.idle += dt;
-      if (G.idle > 6000 && !G.hint) { const ms = R.listMoves(G.s); G.hint = ms.length ? ms[(Math.random() * ms.length) | 0] : []; G.hintLevel = 1; }
-      else if (G.idle > 12000 && G.hintLevel === 1) { G.hint = R.hintMove(G.s) || []; G.hintLevel = 2; }
+      if (G.idle > HINT_MS && !G.hint) { const ms = R.listMoves(G.s); G.hint = ms.length ? ms[(Math.random() * ms.length) | 0] : []; G.hintLevel = 1; } // any legal move, never a solver
     }
   }
   function updateSprites(sec) {
-    const GRAV = 68, MAXV = 24;
+    const k = G.tempo || 1, grav = GRAV / (k * k), maxv = MAXV / k;
     for (const sp of G.sprites.values()) {
       if (sp.tw) {
         const tw = sp.tw, p = clamp((G.t - tw.t0) / tw.dur, 0, 1), e = tw.ease(p);
@@ -862,26 +941,26 @@
       if (sp.falling) {
         if (sp.delay > 0) sp.delay -= sec;
         else {
-          sp.vy = Math.min(MAXV, sp.vy + GRAV * sec); sp.y += sp.vy * sec;
+          sp.vy = Math.min(maxv, sp.vy + grav * sec); sp.y += sp.vy * sec;
           if (sp.y >= sp.ty) {
             sp.y = sp.ty;
-            if (sp.vy > 6) { sp.sy = 1 - Math.min(0.22, sp.vy * 0.012); sp.sx = 2 - sp.sy; sp.vy = -sp.vy * 0.12; if (Math.random() < 0.15) Snd.land(); }
-            else { sp.vy = 0; sp.falling = false; if (sp.exitOnLand) startExit(sp); }
+            if (sp.vy > 6 && sp.ty - (sp.fall0 === undefined ? sp.ty : sp.fall0) >= 2) { // squash only after a real drop (2+ cells)
+              sp.sy = 1 - Math.min(0.22, sp.vy * 0.012); sp.sx = 2 - sp.sy; sp.vy = -sp.vy * 0.12; if (Math.random() < 0.15) Snd.land(); }
+            else { sp.vy = 0; sp.falling = false; sp.fall0 = undefined; if (sp.exitOnLand) startExit(sp); }
           }
         }
       }
       sp.sx += (1 - sp.sx) * Math.min(1, sec * 14); sp.sy += (1 - sp.sy) * Math.min(1, sec * 14);
-      if (sp.grow !== undefined) { sp.grow += sec / 0.28; sp.scale = backOut(clamp(sp.grow, 0, 1)); if (sp.grow >= 1) { delete sp.grow; sp.scale = 1; } }
+      if (sp.grow !== undefined) { sp.grow += sec / 0.28; sp.scale = sp.grow <= 0 ? 0 : backOut(clamp(sp.grow, 0, 1)); if (sp.grow >= 1) { delete sp.grow; sp.scale = 1; } }
       else if (sp.pop < 0) sp.scale += (1 - sp.scale) * Math.min(1, sec * 10);
       if (sp.flash > 0) sp.flash = Math.max(0, sp.flash - sec * 3.5);
       if (sp.wig > 0) sp.wig = Math.max(0, sp.wig - sec * 2.5);
-      if (sp.hop >= 0) { sp.hop += sec; if (sp.hop > 0.5) sp.hop = -1; }
       if (sp.pop >= 0) {
         sp.pop += sec;
-        const p = sp.pop;
-        sp.scale = p < 0.07 ? 1 + p / 0.07 * 0.25 : 1.25 * Math.max(0, 1 - (p - 0.07) / 0.15);
-        if (sp.popTo) { const k = Math.min(1, p / 0.2); sp.x = lerp(sp.x, sp.popTo[0], k * 0.35); sp.y = lerp(sp.y, sp.popTo[1], k * 0.35); }
-        if (p > 0.22) G.sprites.delete(sp.id);
+        const D = sp.popDur || 0.18, p = sp.pop / D; // swell for the first third, then shrink away
+        sp.scale = p < 0.32 ? 1 + p / 0.32 * 0.25 : 1.25 * Math.max(0, 1 - (p - 0.32) / 0.68);
+        if (sp.popTo) { const q = Math.min(1, p / 0.9); sp.x = lerp(sp.x, sp.popTo[0], q * 0.35); sp.y = lerp(sp.y, sp.popTo[1], q * 0.35); }
+        if (p >= 1) G.sprites.delete(sp.id);
       }
       if (sp.exit >= 0) {
         sp.exit += sec; sp.alpha = Math.max(0, 1 - sp.exit / 0.35); sp.y = sp.ty + sp.exit * 2.2; sp.scale = 1 + sp.exit * 0.6;
@@ -894,13 +973,13 @@
   function updateAmbient(sec) {
     const season = G.lv.season, W = L.W, H = L.H;
     if (!G.amb) G.amb = [];
-    const want = season === 'mud' ? 34 : 26;
+    const want = season === 'mud' ? 14 : 10;
     while (G.amb.length < want) {
       const p = { x: Math.random() * W, y: G.amb.length < want / 2 && !G.ambInit ? Math.random() * H : -20, r: Math.random(), ph: Math.random() * 6 };
       if (season === 'march') { p.vy = 18 + p.r * 22; p.vx = 6; p.size = 1.5 + p.r * 2.5; }
       else if (season === 'mud') { p.vy = 260 + p.r * 140; p.vx = -40; p.size = 9 + p.r * 9; }
       else if (season === 'summer') { p.vy = -6 - p.r * 10; p.vx = 12; p.size = 2 + p.r * 2; p.y = G.ambInit ? H + 10 : p.y; }
-      else { p.vy = 30 + p.r * 30; p.vx = 14; p.size = 5 + p.r * 5; }
+      else { p.vy = 22 + p.r * 22; p.vx = 10; p.size = 1.5 + p.r; }
       G.amb.push(p);
     }
     G.ambInit = true;
@@ -918,7 +997,7 @@
       if (season === 'march') { c.fillStyle = 'rgba(255,255,255,.85)'; c.beginPath(); c.arc(p.x, p.y, p.size, 0, 7); c.fill(); }
       else if (season === 'mud') { c.strokeStyle = 'rgba(200,220,235,.45)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x - p.size * 0.15, p.y + p.size); c.stroke(); }
       else if (season === 'summer') { c.fillStyle = `rgba(255,250,210,${0.45 + 0.4 * Math.sin(p.ph * 3)})`; c.beginPath(); c.arc(p.x, p.y, p.size, 0, 7); c.fill(); }
-      else { c.save(); c.translate(p.x, p.y); c.rotate(p.ph * 1.5); A.leafPath(c, 0, 0, p.size); c.fillStyle = ['#e8501f', '#f2a51c', '#d4321a'][(p.r * 3) | 0]; c.fill(); c.restore(); }
+      else { c.fillStyle = 'rgba(255,214,140,.55)'; c.beginPath(); c.ellipse(p.x, p.y, p.size, p.size * 0.7, p.ph, 0, 7); c.fill(); }
     }
   }
 
@@ -967,14 +1046,7 @@
     if (sp.drag) { ox += sp.drag.x * 0.8; oy += sp.drag.y * 0.8; }
     const selected = G.sel >= 0 && G.s.p[G.sel] && G.s.p[G.sel].id === sp.id;
     if (selected) oy -= 0.08 + 0.05 * Math.abs(Math.sin(G.t / 150));
-    let hx = 1, hy = 1;
-    if (sp.hop >= 0) { // anticipation squash, hop, land squash
-      const h = sp.hop / 0.5;
-      if (h < 0.18) { hy = 1 - 0.12 * Math.sin(h / 0.18 * Math.PI); }
-      else if (h < 0.82) { oy -= 0.13 * Math.sin((h - 0.18) / 0.64 * Math.PI); hy = 1.05; }
-      else hy = 1 - 0.08 * Math.sin((h - 0.82) / 0.18 * Math.PI);
-      hx = 2 - hy;
-    }
+    const hx = 1, hy = 1;
     const x = L.bx + (sp.x + 0.5 + ox) * cs, y = L.by + (sp.y + 0.5 + oy) * cs;
     c.save();
     c.translate(x, y + (1 - sp.sy * hy) * cs * 0.4);
@@ -984,7 +1056,8 @@
     if (special) A.specialUnder(c, sp.k, 0, 0, cs, G.t / 1000 + sp.phase, sp.t);
     const img = L.sp[sp.k === K.CONE ? 'cone' : sp.k === K.BUCKET ? 'bucket' : sp.t], S = L.sp.size;
     if (sp.k === K.BUCKET) { const r = cs * (0.5 + 0.04 * Math.sin(G.t / 220)); c.fillStyle = A.rg(c, 0, 0, 0, r, [[0, 'rgba(255,220,110,.75)'], [1, 'rgba(255,200,80,0)']]); c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); }
-    if (img) c.drawImage(img, -S / 2, -S / 2, S, S);
+    const lineK = sp.k === K.ROW || sp.k === K.COL, D = lineK ? S * 0.8 : S; // line clearers: a slightly smaller piece so the chevrons sit clear of it
+    if (img) c.drawImage(img, -D / 2, -D / 2, D, D);
     if (special) A.specialOver(c, sp.k, 0, 0, cs, G.t / 1000 + sp.phase);
     if (sp.ice) A.drawIce(c, 0, 0, cs, sp.ice);
     if (sp.k === K.BUCKET && !sp.exitOnLand && sp.exit < 0) { // little down arrow
@@ -1013,7 +1086,7 @@
         c.fillStyle = A.rg(c, f.x, f.y, 0, f.r, [[0, `rgba(255,230,150,${0.8 * (1 - p)})`], [1, 'rgba(255,200,80,0)']]);
         c.beginPath(); c.arc(f.x, f.y, f.r, 0, 7); c.fill(); c.restore();
       } else if (f.kind === 'flash') {
-        c.fillStyle = `rgba(255,248,225,${0.55 * (1 - p)})`; c.fillRect(-20, -20, L.W + 40, L.H + 40);
+        c.fillStyle = `rgba(255,248,225,${0.25 * (1 - p)})`; c.fillRect(-20, -20, L.W + 40, L.H + 40);
       } else if (f.kind === 'bolt') {
         const e = easeOut(Math.min(1, p * 1.6)), x = lerp(f.x0, f.x1, e), y = lerp(f.y0, f.y1, e);
         c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = 1 - p * 0.8;
@@ -1044,22 +1117,42 @@
     c.lineWidth = Math.max(3, size * 0.16); c.strokeStyle = stroke || A.INK; c.strokeText(text, x, y);
     c.fillStyle = fill; c.fillText(text, x, y);
   }
+  function drawChain(c) { // the chain counter: centred in the strip, a little bigger and a punch every step, gone 180 ms after the chain
+    const ch = G.chain; if (!ch) return;
+    if (ch.end && G.t - ch.end > 180) { G.chain = null; return; }
+    const S = strip(), cs = L.cs, a = ch.end ? 1 - (G.t - ch.end) / 180 : 1, k = clamp((G.t - ch.t0) / 180, 0, 1);
+    const size = Math.round(Math.min(S.room, cs * 1.53, cs * 0.97 * Math.pow(1.08, ch.n - 2))); // digits ~0.72 em: 0.7 cell tall at ×2, +8% a step, 1.1 cell cap
+    const text = G.lv && G.lv.boil ? 'chain ' + ch.n : '×' + ch.n; // Boil Down's HUD already has a ×N heat multiplier
+    c.save(); c.globalAlpha = a; c.translate(S.x, S.y); const pk = 1 + 0.28 * (1 - k) * (1 - k); c.scale(pk, pk);
+    const g = c.createLinearGradient(0, -size / 2, 0, size / 2); g.addColorStop(0, '#fff6d2'); g.addColorStop(1, '#ffc22e');
+    outlinedText(c, text, 0, 0, size, g);
+    c.restore();
+  }
   function drawTexts(c) {
     const cs = L.cs, cx = L.bx + L.bw / 2, cy = L.by + L.bh / 2;
+    drawChain(c);
     for (const f of G.fx) {
       const p = clamp((G.t - f.t0) / f.dur, 0, 1);
       if (f.kind === 'float') {
         c.globalAlpha = 1 - Math.max(0, p - 0.7) / 0.3;
-        const pop = p < 0.12 ? 0.7 + p / 0.12 * 0.45 : p < 0.22 ? 1.15 - (p - 0.12) : 1.05;
-        outlinedText(c, f.text, f.x, f.y - p * cs * 0.9, Math.round(cs * 0.5 * pop), f.color);
+        const pop = p < 0.12 ? 0.7 + p / 0.12 * 0.3 : p < 0.22 ? 1 - (p - 0.12) * 0.5 : 0.95;
+        const y = Math.max(L.by + cs * 0.6, f.y - p * cs * 0.7); // never up against the top edge of the board
+        outlinedText(c, f.text, f.x, y, Math.round(cs * 0.42 * pop), f.color);
         c.globalAlpha = 1;
       } else if (f.kind === 'callout') {
-        const sIn = backOut(clamp(p / 0.22, 0, 1)), fade = 1 - clamp((p - 0.75) / 0.25, 0, 1);
-        const size = Math.min(L.bw / Math.max(6, f.text.length * 0.62), cs * (f.big ? 1.15 : 0.9));
-        c.save(); c.translate(cx, L.by + L.bh * 0.24 - p * cs * 0.3); c.rotate(-0.06); c.scale(sIn, sIn); c.globalAlpha = fade;
-        const g = c.createLinearGradient(0, -size / 2, 0, size / 2); g.addColorStop(0, '#fff6c4'); g.addColorStop(0.5, '#ffc22e'); g.addColorStop(1, '#ee7a12');
+        const S = strip(), sIn = backOut(clamp(p / 0.22, 0, 1)), fade = 1 - clamp((p - 0.75) / 0.25, 0, 1);
+        const room = S.w, x = S.x;
+        const size = Math.min(room / Math.max(5, f.text.length * 0.6), S.h * (f.big ? 1 : 0.82));
+        c.save(); c.translate(x, S.y - p * cs * 0.12); c.scale(sIn, sIn); c.globalAlpha = fade;
+        const g = c.createLinearGradient(0, -size / 2, 0, size / 2);
+        if (f.cool) { g.addColorStop(0, '#f2fbff'); g.addColorStop(1, '#9fd4f5'); } else { g.addColorStop(0, '#fff6c4'); g.addColorStop(0.5, '#ffc22e'); g.addColorStop(1, '#ee7a12'); }
         outlinedText(c, f.text, 0, 0, size, g);
         c.restore();
+      } else if (f.kind === 'plus') {
+        const e = easeInOut(p), x = lerp(f.x0, f.x1, e), y = lerp(f.y0, f.y1, e) - Math.sin(p * Math.PI) * cs * 1.1;
+        c.globalAlpha = p > 0.85 ? (1 - p) / 0.15 : 1;
+        outlinedText(c, f.text, x, y, Math.round(cs * (0.62 - 0.12 * p)), '#ffd84a');
+        c.globalAlpha = 1;
       } else if (f.kind === 'token') {
         const e = easeInOut(p), x = lerp(f.x0, f.x1, e), y = lerp(f.y0, f.y1, e) - Math.sin(p * Math.PI) * cs * 1.2;
         const S = L.sp.size * (0.8 - 0.4 * p);
@@ -1067,7 +1160,13 @@
         c.drawImage(L.sp[f.t], x - S / 2, y - S / 2, S, S); c.globalAlpha = 1;
       } else if (f.kind === 'intro') {
         const inP = easeOut(clamp(p / 0.15, 0, 1)), out = clamp((p - 0.8) / 0.2, 0, 1);
-        const w = Math.min(L.bw * 0.92, 340), lh = 26, h = 70 + f.lines.length * lh;
+        const w = Math.min(L.bw * 0.92, 340), lh = 26;
+        if (!f.wrapped) { // wrap each line to the card, 14 px in from each side
+          c.font = '700 18px Rubik, sans-serif'; const out = [];
+          for (const t of f.lines) { let cur = ''; for (const wd of t.split(' ')) { const nx = cur ? cur + ' ' + wd : wd; if (cur && c.measureText(nx).width > w - 28) { out.push(cur); cur = wd; } else cur = nx; } out.push(cur); }
+          f.lines = out; f.wrapped = true;
+        }
+        const h = 70 + f.lines.length * lh;
         const hudB = $('hud').getBoundingClientRect().bottom, room = L.by - hudB - 16;
         const iy = !L.land && room > h ? hudB + 8 + room / 2 : cy;
         c.save(); c.translate(cx, iy + (1 - inP) * -40 - out * 40); c.globalAlpha = inP * (1 - out);
@@ -1102,15 +1201,20 @@
 
   // ---------------------------------------------------------------- title art
   const floaters = [];
+  /** A few pieces drift up through the space under the menu only, fading out before they reach it (never behind the logo or buttons). */
   function renderTitle() {
     const c = tx, W = L.W, H = L.H;
     c.clearRect(0, 0, W, H);
-    if (!floaters.length) for (let k = 0; k < 10; k++) floaters.push({ x: (k % 2 ? 0.08 + Math.random() * 0.17 : 0.75 + Math.random() * 0.17) * W, y: Math.random() * H, v: 20 + Math.random() * 30, k: k % 6, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.6, s: 0.55 + Math.random() * 0.5 });
+    if (L.titleFloorW !== W || L.titleFloorH !== H) { L.titleFloor = $('title').querySelector('.menu').getBoundingClientRect().bottom + 12; L.titleFloorW = W; L.titleFloorH = H; }
+    const top = L.titleFloor, room = H - top;
+    if (room < 110) return; // no clear band below the buttons (landscape, short screens): no floaters
+    if (!floaters.length) for (let k = 0; k < 6; k++) floaters.push({ x: 0, y: top + Math.random() * room, v: 14 + Math.random() * 18, k: k % 6, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.6, s: 0.4 + Math.random() * 0.3, fx: (k + 0.5) / 6 });
     for (const f of floaters) {
       const fs = Math.min(0.05, (G.frameDt || 16) / 1000); f.y -= f.v * fs; f.r += f.vr * fs;
-      if (f.y < -80) { f.y = H + 60; f.x = (Math.random() < 0.5 ? 0.08 + Math.random() * 0.17 : 0.75 + Math.random() * 0.17) * W; }
       const S = L.titleSp.size * f.s;
-      c.save(); c.globalAlpha = 0.7; c.translate(f.x, f.y); c.rotate(Math.sin(f.r) * 0.4); c.drawImage(L.titleSp[f.k], -S / 2, -S / 2, S, S); c.restore();
+      if (f.y < top + S / 2) { f.y = H + S; f.fx = Math.random(); }
+      const x = W * (0.1 + 0.8 * f.fx), a = 0.6 * clamp((f.y - top - S / 2) / 50, 0, 1);
+      c.save(); c.globalAlpha = a; c.translate(x, f.y); c.rotate(Math.sin(f.r) * 0.4); c.drawImage(L.titleSp[f.k], -S / 2, -S / 2, S, S); c.restore();
     }
   }
 
@@ -1136,7 +1240,7 @@
     const dt = last ? Math.min(50, now - last) : 16;
     last = now;
     if (!G.frozen && G.overlay !== 'pause') { // pause really pauses; a tap during the bonus fast-forwards it
-      if (G.fast && G.ending && !G.overlay) for (let k = 0; k < 8; k++) tick(dt); else tick(dt);
+      advance(dt);
     }
     G.frameDt = dt;
     render();
@@ -1193,7 +1297,7 @@
     $('wNext').addEventListener('click', () => { Snd.click(); if (G.lv.boil) startBoil(); else if (G.lv.daily) showScreen('title'); else if (G.lv.id >= LEVELS.length) showScreen('map'); else startLevel(G.lv.id + 1); });
     $('wReplay').addEventListener('click', () => { Snd.click(); if (G.lv.boil) showScreen('title'); else if (G.lv.daily) startDaily(); else startLevel(G.lv.id); });
     $('wMap').addEventListener('click', () => { Snd.click(); showScreen(G.lv.daily ? 'title' : 'map'); });
-    $('lRetry').addEventListener('click', () => { Snd.click(); if (G.lv.daily) startDaily(); else startLevel(G.lv.id); });
+    $('lRetry').addEventListener('click', () => { Snd.click(); if (G.lv.daily) startDaily(true); else startLevel(G.lv.id, 0, true); });
     $('lMap').addEventListener('click', () => { Snd.click(); showScreen(G.lv.daily ? 'title' : 'map'); });
     updateToggles();
     showScreen('title');
@@ -1203,7 +1307,7 @@
   // ---------------------------------------------------------------- test hooks
   window.__T = {
     start(id, seed) { startLevel(id || 1, seed || 12345); return this.state(); },
-    step(ms) { let n = ms || 16; while (n > 0) { const d = Math.min(16, n); tick(d); n -= d; } render(); return this.state(); },
+    step(ms) { let n = ms || 16; while (n > 0) { const d = Math.min(16, n); advance(d); n -= d; } render(); return this.state(); },
     state() {
       const s = G.s;
       const base = { screen: G.screen, overlay: G.overlay };

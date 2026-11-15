@@ -210,6 +210,7 @@ button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 .theme .lock { position: absolute; left: 36px; top: 30px; width: 24px; height: 24px; border-radius: 50%; background: #2b1610 center/14px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='5' y='11' width='14' height='10' rx='2' fill='%23ffc94a'/%3E%3Cpath d='M8 11V8a4 4 0 018 0v3' fill='none' stroke='%23ffc94a' stroke-width='2.5'/%3E%3C/svg%3E"); z-index: 1; }
 #winUnlock { font-size: 15px; color: #2f8a26; background: #e8ffd9; border: 2px solid #2f8a26; border-radius: 12px; padding: 6px 10px; }
 #barLabel { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font-size: 12px; font-weight: 800; color: #fff4dd; text-shadow: 0 1px 2px #2b1610, 0 0 3px #2b1610; white-space: nowrap; pointer-events: none; z-index: 1; }
+#barInk { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font-size: 12px; font-weight: 800; color: #2b1610; white-space: nowrap; pointer-events: none; z-index: 2; clip-path: inset(0 100% 0 0); transition: clip-path .35s ease-out; }
 #scoreBar.labelled { height: 22px; }
 #scoreBar.dailybar { background: rgba(43,22,16,.85); }
 .theme canvas.mini { flex: none; border-radius: 10px; border: 2.5px solid var(--ink); }
@@ -233,6 +234,7 @@ button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 #goals .pips i.on { opacity: 1; transform: scale(1.1); }
 #goals #heatX, #goals #boilBest { font-family: var(--display); font-size: 20px; line-height: 1; }
 #goals.bump { animation: bump .3s ease-out; }
+#movesBox.bump { animation: bump .3s ease-out; }
 #tip.band { transform: translate(-50%, -50%); animation: none; }
 #goals.cool { animation: cool .5s ease-out; }
 @keyframes cool { 30% { box-shadow: 0 4px 0 rgba(0,0,0,.35), 0 0 0 4px #9fd2ff; } }

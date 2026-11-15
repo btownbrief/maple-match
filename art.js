@@ -4,8 +4,8 @@
   'use strict';
   const INK = '#2b1610';
   // main colour per piece type, used for particles and UI chips
-  const COLORS = ['#a35ad6', '#ecd3ac', '#ec4a1f', '#ffc62e', '#69c23a', '#2f86b0'];
-  const LIGHT = ['#e7c4ff', '#fff6e6', '#ffb08f', '#fff1a8', '#d6ffb0', '#bde6ff'];
+  const COLORS = ['#a35ad6', '#ecd3ac', '#d9301c', '#ffc62e', '#69c23a', '#3aa6e0'];
+  const LIGHT = ['#e7c4ff', '#fff6e6', '#ffa08a', '#fff1a8', '#d6ffb0', '#c9ecff'];
   const ASSETS = {}; // key -> HTMLImageElement once loaded
 
   function rr(c, x, y, w, h, r) {
@@ -76,9 +76,9 @@
     c.beginPath(); c.moveTo(0, 0.25); c.quadraticCurveTo(0.02, 0.6, 0.12, 0.86); c.lineWidth = 0.2; c.strokeStyle = INK; c.lineCap = 'round'; c.stroke();
     c.lineWidth = 0.08; c.strokeStyle = '#8a2a10'; c.stroke();
     leafPath(c, 0, 0, 1);
-    c.fillStyle = rg(c, -0.25, -0.35, 0.05, 1.1, [[0, '#ffb35a'], [0.45, '#ef5a22'], [1, '#b8230f']]); c.fill();
+    c.fillStyle = rg(c, -0.25, -0.35, 0.05, 1.1, [[0, '#ff7a5c'], [0.45, '#d9301c'], [1, '#9c1a0c']]); c.fill();
     c.lineWidth = 0.075; c.strokeStyle = INK; c.lineJoin = 'miter'; c.miterLimit = 3; c.stroke();
-    c.strokeStyle = 'rgba(120,20,5,.6)'; c.lineWidth = 0.045; c.lineCap = 'round';
+    c.strokeStyle = 'rgba(90,10,4,.55)'; c.lineWidth = 0.045; c.lineCap = 'round';
     [[0, -0.72], [0.74, -0.26], [-0.74, -0.26], [0.42, 0.3], [-0.42, 0.3]].forEach(p => { c.beginPath(); c.moveTo(0, 0.24); c.lineTo(p[0], p[1]); c.stroke(); });
     shine(c, -0.3, -0.3, 0.16, 0.06, -0.7, 0.45);
     c.restore();
@@ -94,9 +94,9 @@
     c.lineTo(-0.6, 0.72); c.quadraticCurveTo(-0.6, 0.9, -0.42, 0.9); c.lineTo(0.42, 0.9); c.quadraticCurveTo(0.6, 0.9, 0.6, 0.72);
     c.lineTo(0.6, -0.05); c.quadraticCurveTo(0.6, -0.36, 0.18, -0.42); c.lineTo(0.18, -0.5); c.closePath();
     c.fillStyle = lg(c, -0.6, 0, 0.6, 0, [[0, '#c9780c'], [0.3, '#ffd451'], [0.55, '#ffc22a'], [1, '#b8660a']]); c.fill(); ink(c);
-    // label with a small leaf
+    // plain cream label with one dark line
     rr(c, -0.4, 0.12, 0.8, 0.5, 0.1); c.fillStyle = '#fff3d6'; c.fill(); c.lineWidth = 0.05; c.strokeStyle = INK; c.stroke();
-    leafPath(c, 0, 0.36, 0.2); c.fillStyle = '#d8401c'; c.fill();
+    c.beginPath(); c.moveTo(-0.22, 0.37); c.lineTo(0.22, 0.37); c.lineWidth = 0.07; c.lineCap = 'round'; c.strokeStyle = 'rgba(43,22,16,.8)'; c.stroke();
     // cap
     rr(c, -0.24, -0.78, 0.48, 0.3, 0.07); c.fillStyle = lg(c, 0, -0.78, 0, -0.48, [[0, '#c44a2a'], [1, '#7c2412']]); c.fill(); ink(c, 0.065);
     c.strokeStyle = 'rgba(255,255,255,.3)'; c.lineWidth = 0.03; for (let k = -0.15; k <= 0.16; k += 0.1) { c.beginPath(); c.moveTo(k, -0.74); c.lineTo(k, -0.53); c.stroke(); }
@@ -119,28 +119,27 @@
   }
   function pinecone(c) {
     shadow(c, 0.9, 0.42);
-    // needles sprig at top
-    c.save(); c.lineCap = 'round';
-    [[-0.5, -0.95], [-0.25, -1.02], [0.3, -1.0], [0.55, -0.9]].forEach(p => { c.beginPath(); c.moveTo(0, -0.66); c.lineTo(p[0], p[1]); c.lineWidth = 0.13; c.strokeStyle = INK; c.stroke(); c.lineWidth = 0.06; c.strokeStyle = '#7a4a22'; c.stroke(); });
+    // plain fat teardrop, round at the top and pointing down
+    const body = () => { c.beginPath(); c.moveTo(0, 0.95); c.bezierCurveTo(-0.32, 0.62, -0.74, 0.2, -0.72, -0.22); c.bezierCurveTo(-0.7, -0.92, 0.7, -0.92, 0.72, -0.22); c.bezierCurveTo(0.74, 0.2, 0.32, 0.62, 0, 0.95); c.closePath(); };
+    body(); c.fillStyle = lg(c, 0, -0.8, 0, 0.95, [[0, '#5cbcf0'], [0.55, '#3aa6e0'], [1, '#1f78b4']]); c.fill();
+    // three rows of big overlapping scales (2, 3, 2), painted bottom-up so each row tucks under the one above
+    c.save(); body(); c.clip();
+    const scale = (x, y, w) => {
+      const h = w * 1.5;
+      c.beginPath(); c.moveTo(x - w, y - 0.3); c.lineTo(x - w, y); c.quadraticCurveTo(x - w * 0.95, y + h * 0.9, x, y + h); c.quadraticCurveTo(x + w * 0.95, y + h * 0.9, x + w, y); c.lineTo(x + w, y - 0.3); c.closePath();
+      c.fillStyle = lg(c, 0, y - 0.1, 0, y + h, [[0, '#2f96d2'], [0.55, '#4fb6ec'], [1, '#c9ecff']]); c.fill();
+      c.beginPath(); c.moveTo(x - w, y); c.quadraticCurveTo(x - w * 0.95, y + h * 0.9, x, y + h); c.quadraticCurveTo(x + w * 0.95, y + h * 0.9, x + w, y);
+      c.lineWidth = 0.07; c.strokeStyle = 'rgba(12,48,84,.9)'; c.lineCap = 'round'; c.stroke();
+    };
+    [[-0.25, 0.18], [0.25, 0.18]].forEach(([x, y]) => scale(x, y, 0.26));
+    [[-0.5, -0.22], [0, -0.22], [0.5, -0.22]].forEach(([x, y]) => scale(x, y, 0.26));
+    [[-0.26, -0.62], [0.26, -0.62]].forEach(([x, y]) => scale(x, y, 0.27));
     c.restore();
-    // body
-    c.beginPath(); c.moveTo(0, -0.72); c.bezierCurveTo(0.62, -0.7, 0.72, 0.1, 0.38, 0.58); c.quadraticCurveTo(0.14, 0.92, 0, 0.94); c.quadraticCurveTo(-0.14, 0.92, -0.38, 0.58); c.bezierCurveTo(-0.72, 0.1, -0.62, -0.7, 0, -0.72); c.closePath();
-    c.fillStyle = '#1d4f78'; c.fill();
-    c.save(); c.clip();
-    const rows = [[-0.55, 3], [-0.32, 4], [-0.08, 5], [0.16, 4], [0.4, 3], [0.64, 2]];
-    rows.forEach((r, ri) => {
-      const [y, n] = r, span = [0.5, 0.62, 0.7, 0.62, 0.48, 0.3][ri];
-      for (let k = 0; k < n; k++) {
-        const x = n === 1 ? 0 : -span + (2 * span) * k / (n - 1);
-        c.beginPath(); c.moveTo(x - 0.17, y - 0.08); c.quadraticCurveTo(x, y - 0.02, x + 0.17, y - 0.08); c.quadraticCurveTo(x + 0.15, y + 0.12, x, y + 0.2); c.quadraticCurveTo(x - 0.15, y + 0.12, x - 0.17, y - 0.08); c.closePath();
-        c.fillStyle = lg(c, 0, y - 0.1, 0, y + 0.2, [[0, '#2f78b0'], [0.6, '#5cb0e0'], [1, '#e6f6ff']]); c.fill();
-        c.lineWidth = 0.035; c.strokeStyle = 'rgba(8,30,48,.85)'; c.stroke();
-      }
-    });
+    body(); ink(c, 0.09);
+    // light rim on the upper left so it reads on dark boards
+    c.save(); body(); c.clip();
+    c.beginPath(); c.arc(0, -0.2, 0.62, Math.PI * 0.95, Math.PI * 1.55); c.lineWidth = 0.1; c.strokeStyle = '#c9ecff'; c.stroke();
     c.restore();
-    c.beginPath(); c.moveTo(0, -0.72); c.bezierCurveTo(0.62, -0.7, 0.72, 0.1, 0.38, 0.58); c.quadraticCurveTo(0.14, 0.92, 0, 0.94); c.quadraticCurveTo(-0.14, 0.92, -0.38, 0.58); c.bezierCurveTo(-0.72, 0.1, -0.62, -0.7, 0, -0.72); c.closePath(); ink(c, 0.09);
-    c.save(); c.clip(); c.lineWidth = 0.08; c.strokeStyle = 'rgba(210,240,255,.75)'; c.stroke(); c.restore(); // light rim so it reads on dark boards
-    shine(c, -0.3, -0.3, 0.07, 0.2, 0.3, 0.55);
   }
   /** The maple-vanilla twist cone (match-5 special). */
   function twistCone(c) {
@@ -223,25 +222,7 @@
     c.save(); c.translate(x, y);
     const p = 0.5 + 0.5 * Math.sin(t * 5);
     if (k === 1 || k === 2) {
-      if (k === 2) c.rotate(Math.PI / 2);
-      const w = s * 0.5, h = s * 0.2;
-      // glowing rail across the cell
-      c.fillStyle = lg(c, 0, -h, 0, h, [[0, 'rgba(255,200,60,0)'], [0.5, `rgba(255,236,150,${0.75 + 0.25 * p})`], [1, 'rgba(255,200,60,0)']]);
-      c.fillRect(-w, -h, 2 * w, 2 * h);
-      // a light streak sliding along the rail
-      const sx = ((t * 1.6) % 2 - 1) * w;
-      c.fillStyle = rg(c, sx, 0, 0, s * 0.22, [[0, 'rgba(255,255,255,.9)'], [1, 'rgba(255,255,255,0)']]);
-      c.fillRect(-w, -h, 2 * w, 2 * h);
-      // bold double chevrons at both ends
-      c.lineJoin = 'round'; c.lineCap = 'round';
-      [-1, 1].forEach(d => {
-        for (let j = 0; j < 2; j++) {
-          const ex = d * (s * (0.47 - j * 0.11) + p * s * 0.02);
-          c.beginPath(); c.moveTo(ex - d * s * 0.1, -s * 0.12); c.lineTo(ex, 0); c.lineTo(ex - d * s * 0.1, s * 0.12);
-          c.lineWidth = s * 0.085; c.strokeStyle = INK; c.stroke();
-          c.lineWidth = s * 0.045; c.strokeStyle = j ? '#fff3b0' : '#ffd23a'; c.stroke();
-        }
-      });
+      // nothing under a line clearer: the piece itself stays clean (chevrons are drawn on top)
     } else if (k === 3) {
       c.rotate(t * 0.8);
       const n = 10, r0 = s * 0.3, r1 = s * (0.5 + 0.04 * p);
@@ -266,14 +247,18 @@
     c.save(); c.translate(x, y);
     const p = 0.5 + 0.5 * Math.sin(t * 5);
     if (k === 1 || k === 2) {
+      // two solid cream arrowheads at the cell edges, 0.16 cell deep, pointing the way it clears; outside the
+      // (slightly shrunk) piece. A slow pulse once a second, anchored at the tip so it never grows into the piece.
       if (k === 2) c.rotate(Math.PI / 2);
-      // a gold ribbon band wrapped around the piece
-      c.globalAlpha = 0.9;
-      rr(c, -s * 0.36, -s * 0.075, s * 0.72, s * 0.15, s * 0.07);
-      c.fillStyle = lg(c, 0, -s * 0.075, 0, s * 0.075, [[0, '#fff6c8'], [0.5, '#ffcf3a'], [1, '#e89a12']]); c.fill();
-      c.lineWidth = s * 0.03; c.strokeStyle = INK; c.stroke();
-      c.globalAlpha = 0.55 + 0.4 * p; c.fillStyle = '#fff';
-      rr(c, -s * 0.3, -s * 0.05, s * 0.6, s * 0.03, s * 0.015); c.fill();
+      const z = s * 0.16, q = 1 + 0.08 * (0.5 - 0.5 * Math.cos(t * Math.PI * 2));
+      c.lineJoin = 'round';
+      [-1, 1].forEach(d => {
+        const ex = d * s * 0.5;
+        c.save(); c.translate(ex, 0); c.scale(q, q);
+        c.beginPath(); c.moveTo(0, 0); c.lineTo(-d * z, -z * 1.05); c.lineTo(-d * z * 0.8, 0); c.lineTo(-d * z, z * 1.05); c.closePath();
+        c.fillStyle = '#fff3c4'; c.fill(); c.lineWidth = s * 0.03; c.strokeStyle = INK; c.stroke();
+        c.restore();
+      });
     } else if (k === 3) {
       c.globalAlpha = 0.5 + 0.4 * p;
       c.beginPath(); c.arc(0, 0, s * 0.44, 0, 7); c.lineWidth = s * 0.05; c.strokeStyle = '#fff3b0'; c.stroke();
@@ -307,24 +292,14 @@
   /** Frost over a frozen piece. n: 1 thin, 2 thick. crack: 0..1 freshly hit. */
   function drawIce(c, x, y, s, n) {
     c.save(); c.translate(x, y);
-    const h = s * 0.47;
+    const h = s * 0.46;
     rr(c, -h, -h, 2 * h, 2 * h, s * 0.16);
-    c.fillStyle = n >= 2 ? 'rgba(205,236,255,.5)' : 'rgba(205,236,255,.3)'; c.fill();
-    c.lineWidth = s * (n >= 2 ? 0.05 : 0.035); c.strokeStyle = 'rgba(255,255,255,.95)'; c.stroke();
+    c.fillStyle = n >= 2 ? 'rgba(205,236,255,.22)' : 'rgba(205,236,255,.12)'; c.fill();
+    c.lineWidth = s * 0.07; c.strokeStyle = '#bfe4ff'; c.stroke();
+    if (n >= 2) { const g = s * 0.12; rr(c, -h + g, -h + g, 2 * (h - g), 2 * (h - g), s * 0.1); c.lineWidth = s * 0.05; c.stroke(); }
     c.save(); rr(c, -h, -h, 2 * h, 2 * h, s * 0.16); c.clip();
-    c.fillStyle = 'rgba(255,255,255,.38)';
-    c.beginPath(); c.moveTo(-h, -h * 0.2); c.lineTo(-h * 0.2, -h); c.lineTo(h * 0.1, -h); c.lineTo(-h, h * 0.1); c.closePath(); c.fill();
-    c.beginPath(); c.moveTo(-h * 0.1, h); c.lineTo(h, -h * 0.1); c.lineTo(h, h * 0.15); c.lineTo(h * 0.15, h); c.closePath(); c.fillStyle = 'rgba(255,255,255,.3)'; c.fill();
-    if (n >= 2) { // frost crystals in the corners
-      c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = s * 0.025;
-      [[-0.62, -0.62], [0.62, 0.62], [0.62, -0.62], [-0.62, 0.62]].forEach(p => {
-        const px = p[0] * h, py = p[1] * h, r = s * 0.09;
-        for (let i = 0; i < 3; i++) { const a = i * Math.PI / 3; c.beginPath(); c.moveTo(px - Math.cos(a) * r, py - Math.sin(a) * r); c.lineTo(px + Math.cos(a) * r, py + Math.sin(a) * r); c.stroke(); }
-      });
-    } else { // a crack line
-      c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = s * 0.02;
-      c.beginPath(); c.moveTo(-h * 0.7, -h * 0.4); c.lineTo(-h * 0.2, -h * 0.05); c.lineTo(-h * 0.3, h * 0.4); c.moveTo(-h * 0.2, -h * 0.05); c.lineTo(h * 0.35, h * 0.1); c.stroke();
-    }
+    c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = s * 0.022; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(-h * 0.75, -h * 0.45); c.lineTo(-h * 0.25, -h * 0.05); c.lineTo(-h * 0.35, h * 0.4); c.moveTo(-h * 0.25, -h * 0.05); c.lineTo(h * 0.3, h * 0.1); c.stroke();
     c.restore();
     c.restore();
   }
@@ -408,7 +383,7 @@
       c.fillStyle = 'rgba(255,255,255,.8)';
       for (let i = 0; i < 40; i++) { c.beginPath(); c.arc(prand(i + 3) * w, prand(i + 33) * h * 0.9, 1 + prand(i) * 2, 0, 7); c.fill(); }
     }
-    if (season === 'october') { // drifting leaves
+    if (season === 'october' && !opts.calm) { // drifting leaves (not behind a live board: they look like the leaf piece)
       for (let i = 0; i < 14; i++) { c.save(); c.translate(prand(i + 3) * w, prand(i + 13) * h * 0.85); c.rotate(prand(i) * 6); leafPath(c, 0, 0, u * 0.025); c.fillStyle = ['#e8501f', '#f2a51c', '#d4321a'][i % 3]; c.fill(); c.restore(); }
     }
     if (opts.extendTo > h) { // ground continues below the scene (the board sits on it)
